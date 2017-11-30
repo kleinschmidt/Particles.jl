@@ -57,6 +57,3 @@ function marginal_log_lhood(o::FitNormalInverseChisq)
         (0.5*ν0)*(log(ν0)+log(σ20)) - (0.5*νn)*(log(νn)+log(σ2n)) -
         (0.5*n)*log(π)
 end
-
-marginal_lhood(s::Series) = marginal_lhood.(s.stats)
-marginal_log_lhood(s::Series) = marginal_log_lhood.(s.stats)
