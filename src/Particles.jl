@@ -15,9 +15,13 @@ using OnlineStats: Variance, nobs, EqualWeight
 using OnlineStatsBase: ExactStat
 
 export
-    FitNormalInverseChisq
+    FitNormalInverseChisq,
+    fit!,
+    posterior_predictive,
+    marginal_lhood,
+    marginal_log_lhood
 
 # package code goes here
-include("fitnix2.jl")
+include("nix2.jl")
 
 end # module

@@ -1,4 +1,6 @@
 using Particles
 using Base.Test
 
-include("fitnix2.jl")
+@testset "Particles" begin
+    include("nix2.jl")
+end
