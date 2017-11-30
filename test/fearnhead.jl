@@ -51,7 +51,7 @@
         @test cut/tot ≈ 1/10
 
         # when weights are all equal or zero, also resample all with weight 1/N
-        ws = [i > 10 ? 0. : 1/10 for i in 1:20]
+        ws = [i > 10 ? 0. : 1. for i in 1:20]
         keep, cut, tot = cutoff(ws, 10)
         @test isapprox(cutoff_normalized(ws, 10)[2], cut/tot, atol=1e-10)
         @test isapprox(cutoff_while(ws, 10)[2], cut/tot, atol=1e-10)
