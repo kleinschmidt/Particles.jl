@@ -16,12 +16,15 @@ using OnlineStatsBase: ExactStat
 
 export
     FitNormalInverseChisq,
+    Particle,
     fit!,
     posterior_predictive,
     marginal_lhood,
-    marginal_log_lhood
+    marginal_log_lhood,
+    putatives
 
 # package code goes here
 include("nix2.jl")
+include("fearnhead.jl")
 
 end # module
