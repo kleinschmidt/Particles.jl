@@ -1,5 +1,4 @@
 using Particles
 using Base.Test
 
-# write your own tests here
-@test 1 == 2
+include("fitnix2.jl")
