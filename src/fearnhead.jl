@@ -1,28 +1,27 @@
-## Fearnhead non-parametric clustering
-
-"""
-A Particle holds the `FitNormalInverseChisq` for each category, the category
-assignments ``x`` the weight for the particle.
-"""
-mutable struct Particle{T}
-    components::Vector{T}
-    assignments::Vector{Int}
-    weight::Float64
+mutable struct FearnheadParticles <: ExactStat{0}
+    particles::Vector{Particle}
+    N::Int
 end
 
-Particle(priors...) = Particle([FitNormalInverseChisq(p) for p in priors], Int[], 1.0)
+# Initialize population with a single, empty particle. (avoid redundancy)
+FearnheadParticles(n::Int, priors...) = FearnheadParticles([Particle(priors...)], n)
 
-Base.copy(p::Particle) = deepcopy(p)
+"""
+    cutoff(ws::Vector{<:Real}, N::Int)
 
-function fit!(p::Particle, y::Float64, x::Int)
-    old_log_lhood = marginal_log_lhood(p.components[x])
-    fit!(p.components[x], y)
-    p.weight = p.weight * exp(marginal_log_lhood(p.components[x]) - old_log_lhood)
-    push!(p.assignments, x)
-    p
+Find the cutoff for weights to automatically propogate.  Returns
+
+* `i`, the index of the first weight _not_ automatically propogated
+* `1/c`, the **unnormalized** weight for the resampled particles
+* `tot0` the total weight (for normalization)
+"""
+function cutoff(ws::Vector{<:Real}, N::Int)
+    tot0 = sum(ws)
+    tot = tot0
+    for i in eachindex(ws)
+        if tot / ws[i] + (i-1) >= N
+            return i, tot/(N-i+1), tot0
+        end
+        tot -= ws[i]
+    end
 end
-
-weight(p::Particle) = p.weight
-weight!(p::Particle, w::Real) = (p.weight=w; p)
-
-putatives(p::Particle, y::Real) = [fit!(copy(p), y, j) for j in 1:length(p.components)]

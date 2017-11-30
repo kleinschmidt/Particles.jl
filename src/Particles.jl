@@ -25,6 +25,7 @@ export
 
 # package code goes here
 include("nix2.jl")
+include("particle.jl")
 include("fearnhead.jl")
 
 end # module
