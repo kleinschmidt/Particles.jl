@@ -1,10 +1,12 @@
-mutable struct FearnheadParticles <: ExactStat{0}
-    particles::Vector{Particle}
+mutable struct FearnheadParticles{P} <: ExactStat{0}
+    particles::Vector{P}
     N::Int
 end
 
 # Initialize population with a single, empty particle. (avoid redundancy)
 FearnheadParticles(n::Int, priors...) = FearnheadParticles([Particle(priors...)], n)
+FearnheadParticles(n::Int, prior::Tuple, α::Float64) = FearnheadParticles([InfiniteParticle(prior, α)], n)
+
 
 """
     cutoff(ws::Vector{<:Real}, N::Int)
@@ -32,7 +34,7 @@ end
 Filter a single observation with the population of particles in `ps`.
 
 """
-function fit!(ps::FearnheadParticles, y::Float64)
+function fit!(ps::FearnheadParticles{P}, y::Float64) where P
     # generate putative particles
     putative = mapreduce(p->putatives(p,y), vcat, Particle[], ps.particles)
     total_w = sum(weight(p) for p in putative)
@@ -48,7 +50,7 @@ function fit!(ps::FearnheadParticles, y::Float64)
         ws = weight.(putative)
         ci, c, totalw = cutoff(ws, ps.N)
         @debug "  keeping $(ci-1) out of $M (cutoff=$c)"
-        ps.particles = Vector{Particle}(ps.N)
+        ps.particles = Vector{P}(ps.N)
         # propagate particles 1:ci-1
         ps.particles[1:ci-1] .= putative[1:ci-1]
         # resample the rest:

@@ -1,3 +1,29 @@
+"""
+    FitNormalInverseChisq <: ExactStat{0}
+
+An `OnlineStat` that fits a normal distribution with unknown mean and variance,
+using a conjugate `NormalInverseChisq` prior.
+
+# Constructors
+
+```julia
+FitNormalInverseChisq(μ0::T, σ20::T, κ0::T, ν0::T) where T<:Real
+FitNormalInverseChisq(ps::NTuple{4,T}) where {T<:Real}
+# uninformative prior
+FitNormalInverseChisq()
+```
+
+# Examples
+
+```julia
+f = FitNormalInverseChisq()
+fit!(Series(f), randn(100))
+posterior = NormalInverseChisq(f)
+predictive = posterior_predictive(posterior)
+```
+
+"""
+
 mutable struct FitNormalInverseChisq <: ExactStat{0}
     var::Variance
     prior::NormalInverseChisq
@@ -8,6 +34,8 @@ FitNormalInverseChisq(μ0::T, σ20::T, κ0::T, ν0::T) where T<:Real =
     FitNormalInverseChisq(NormalInverseChisq(μ0, σ20, κ0, ν0))
 FitNormalInverseChisq(ps::NTuple{4,T}) where {T<:Real} = FitNormalInverseChisq(ps...)
 FitNormalInverseChisq() = FitNormalInverseChisq(0.0, 1.0, 0.0, 0.0)
+
+OnlineStats.nobs(o::FitNormalInverseChisq) = nobs(o.var)
 
 ## Fitting
 Base.convert(::Type{NormalStats}, o::Variance) =
@@ -21,7 +49,6 @@ function OnlineStatsBase._value(o::FitNormalInverseChisq)
         params(NormalInverseChisq(o)) :
         params(o.prior)
 end
-
 
 posterior_predictive(d::NormalInverseChisq) =
     LocationScale(d.μ, sqrt((1+d.κ)*d.σ2/d.κ), TDist(d.ν))

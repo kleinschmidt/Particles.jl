@@ -5,7 +5,8 @@ using
     ConjugatePriors,
     OnlineStatsBase,
     OnlineStats,
-    StatsBase
+    StatsBase,
+    ArgCheck
 
 import StatsBase: fit!
 
@@ -17,6 +18,7 @@ using OnlineStatsBase: ExactStat
 export
     FitNormalInverseChisq,
     Particle,
+    InfiniteParticle,
     FearnheadParticles,
     fit!,
     posterior_predictive,
