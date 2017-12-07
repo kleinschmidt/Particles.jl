@@ -16,6 +16,7 @@ using OnlineStats: Variance, nobs, EqualWeight
 using OnlineStatsBase: ExactStat
 
 export
+    Series,
     FitNormalInverseChisq,
     Particle,
     InfiniteParticle,
