@@ -74,20 +74,20 @@ posterior:
 \frac{p(y_{1:n+1} | (z_{1:n}, x)) p((z_{1:n}, x))}{p(y_{1:n} | z_{1:n}) p(z_{1:n})}
 \]
 
-The prior ratio can be reduced using the conditional distribution: $p(z_{1:n},
-x)/p(z_{1:n}) = p(x | z_{1:n})$.  Under a Chinese Restaurant Process prior, this
-is $N_x / \sum_j N_j + \alpha$ if $x$ corresponds to an existing component and
-$\alpha / \sum_j N_j + \alpha$ if it's new.  Because the total count $\sum_j
-N_j$ is the same across particles, the net change is proportional to $N_x$ or
-$\alpha$.
+The prior ratio can be reduced using the conditional distribution: ``p(z_{1:n},
+x)/p(z_{1:n}) = p(x | z_{1:n})``.  Under a Chinese Restaurant Process prior, this
+is ``N_x / \sum_j N_j + \alpha`` if ``x`` corresponds to an existing component and
+``\alpha / \sum_j N_j + \alpha`` if it's new.  Because the total count ``\sum_j
+N_j`` is the same across particles, the net change is proportional to ``N_x`` or
+``\alpha``.
 
-The likelihood ratio also depends on whether $y$ is being assigned to a new
+The likelihood ratio also depends on whether ``y`` is being assigned to a new
 component or not.  If it is being assigned to a new component, then its marginal
 likelihood is independent of all other points and the entire adjustment is
-proportional to the marginal likelihood of $y$ under the prior.  When $x$
+proportional to the marginal likelihood of ``y`` under the prior.  When ``x``
 corresponds to an existing component, the adjustment is proportional to the
 ratio of the marginal likelihood of that component before and after
-incorporating $y$: $\frac{p(y_{x_i=x}, y_{n+1})}{p(y_{x_i=x})}$.
+incorporating ``y``: ``\frac{p(y_{x_i=x}, y_{n+1})}{p(y_{x_i=x})}``.
 
 """
 function fit!(p::InfiniteParticle, y::Real, x::Int)
