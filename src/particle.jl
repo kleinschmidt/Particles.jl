@@ -6,6 +6,16 @@ Base.copy(p::T) where T<:AbstractParticle = deepcopy(p)
 weight(p::AbstractParticle) = p.weight
 weight!(p::AbstractParticle, w::Real) = (p.weight=w; p)
 
+function Base.sort!(p::T) where T<:AbstractParticle
+    ix = sortperm(p.components, by=value)
+    p.components .= p.components[ix]
+    # reverse mapping: rev_ix[i] is the new index for old index i
+    rev_ix = sortperm(ix)
+    p.assignments .= rev_ix[p.assignments]
+    return p
+end
+
+
 """
 A Particle holds the `FitNormalInverseChisq` for each category, the category
 assignments ``x`` the weight for the particle.

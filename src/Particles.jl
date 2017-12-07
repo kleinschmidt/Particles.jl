@@ -25,7 +25,8 @@ export
     posterior_predictive,
     marginal_lhood,
     marginal_log_lhood,
-    putatives
+    putatives,
+    normalize_clusters!
 
 
 const DEBUG = true

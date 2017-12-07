@@ -68,3 +68,13 @@ end
 
 # just ignore weights in fit!
 fit!(ps::FearnheadParticles, y::Float64, w::Float64) = fit!(ps, y)
+
+
+function normalize_clusters!(ps::FearnheadParticles, method::Symbol)
+    if method == :sort
+        sort!.(ps.particles)
+    else
+        throw(ArgumentError("Method $method not supported"))
+    end
+    return ps
+end
