@@ -5,7 +5,7 @@ end
 
 # Initialize population with a single, empty particle. (avoid redundancy)
 FearnheadParticles(n::Int, priors...) = FearnheadParticles([Particle(priors...)], n)
-FearnheadParticles(n::Int, prior::Tuple, α::Float64) = FearnheadParticles([InfiniteParticle(prior, α)], n)
+FearnheadParticles(n::Int, prior::Union{Tuple,<:Distribution}, α::Float64) = FearnheadParticles([InfiniteParticle(prior, α)], n)
 
 
 """
@@ -78,3 +78,6 @@ function normalize_clusters!(ps::FearnheadParticles, method::Symbol)
     end
     return ps
 end
+
+
+posterior_predictive(ps::FearnheadParticles) = MixtureModel(posterior_predictive.(ps.particles), weight.(ps.particles))

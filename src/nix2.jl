@@ -52,6 +52,7 @@ end
 
 posterior_predictive(d::NormalInverseChisq) =
     LocationScale(d.μ, sqrt((1+d.κ)*d.σ2/d.κ), TDist(d.ν))
+posterior_predictive(f::FitNormalInverseChisq) = posterior_predictive(NormalInverseChisq(f))
 
 """
     marginal_lhood(o::FitNormalInverseChisq)

@@ -51,6 +51,7 @@ mutable struct InfiniteParticle{T} <: AbstractParticle
 end
 
 InfiniteParticle(prior::T, α::Float64) where T = InfiniteParticle{T}(T[], Int[], 1.0, prior, α)
+InfiniteParticle(prior::NormalInverseChisq, α::Float64) = InfiniteParticle(FitNormalInverseChisq(prior), α)
 
 InfiniteParticle(params::NTuple{4,Float64}, α::Float64) =
     InfiniteParticle(FitNormalInverseChisq(params), α)
@@ -110,3 +111,25 @@ function fit!(p::InfiniteParticle, y::Real, x::Int)
     push!(p.assignments, x)
     return p
 end
+
+
+
+
+
+components(p::Particle) = p.components
+components(p::InfiniteParticle) = [p.components..., p.prior]
+
+weights(p::Particle) = ones(length(p.components)) ./ length(p.components)
+weights(p::InfiniteParticle) = (w = Float64.(push!(nobs.(p.components), p.α)); w ./= sum(w); w)
+
+"""
+    posterior_predictive(p::P) where P<:AbstractParticle
+
+Get the posterior predictive distribution for a particle, which is a mixture of
+the posterior predictives for each component (including the prior, for an
+`InfiniteParticle`).
+"""
+
+posterior_predictive(p::P) where P<:AbstractParticle =
+    MixtureModel(posterior_predictive.(components(p)), weights(p))
+

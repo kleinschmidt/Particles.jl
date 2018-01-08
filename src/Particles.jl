@@ -26,10 +26,11 @@ export
     marginal_lhood,
     marginal_log_lhood,
     putatives,
-    normalize_clusters!
+    normalize_clusters!,
+    weight
 
 
-const DEBUG = true
+const DEBUG = false
 
 macro debug(msg)
     DEBUG ? :(println(string($(esc(msg))))) : nothing
