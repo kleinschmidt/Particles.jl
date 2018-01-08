@@ -1,3 +1,5 @@
+using ProgressMeter
+
 mutable struct FearnheadParticles{P} <: ExactStat{0}
     particles::Vector{P}
     N::Int
@@ -68,6 +70,13 @@ end
 
 # just ignore weights in fit!
 fit!(ps::FearnheadParticles, y::Float64, w::Float64) = fit!(ps, y)
+
+function fit!(ps::FearnheadParticles{P}, ys::AbstractVector{Float64}) where P
+    @showprogress 1 "Fitting particles..." for y in ys
+        fit!(ps, y)
+    end
+    ps
+end
 
 
 function normalize_clusters!(ps::FearnheadParticles, method::Symbol)
