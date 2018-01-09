@@ -25,6 +25,8 @@ export
     posterior_predictive,
     marginal_lhood,
     marginal_log_lhood,
+    marginal_posterior,
+    marginal_log_posterior,
     putatives,
     normalize_clusters!,
     weight
