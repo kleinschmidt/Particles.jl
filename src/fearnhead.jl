@@ -1,5 +1,18 @@
 using ProgressMeter
 
+# some potential optimizations: 
+# * make particles themselves immutable and avoid copying
+# * keep track of assignments at population level, not particles (to need to
+#   copy vectors on particle copy/propogation
+# * use ancestor indices to link from one iteration to the next. (take advantage
+#   of shared ancestry).  requires reconstructing the full assignment vectors
+#   afterwards but who cares at that point.
+#
+# all of this means we can get rid of hte online stat thing...I don't know it's
+# really approrpiate here anyway...
+
+
+
 mutable struct FearnheadParticles{P} <: ExactStat{0}
     particles::Vector{P}
     N::Int
