@@ -44,7 +44,7 @@ end
 add(c::Component, x) = Component(c.prior, add(c.suffstats, x))
 sub(c::Component, x) = Component(c.prior, sub(c.suffstats, x))
 
-nobs(c::Component) = c.suffstats.tw
+nobs(c::Component) = Int(c.suffstats.tw)
 Base.isempty(c::Component) = nobs(c) > 0
 
 

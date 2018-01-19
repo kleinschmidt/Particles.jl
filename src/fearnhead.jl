@@ -22,7 +22,7 @@ function Base.show(io::IO, ps::FearnheadParticles)
     if n < ps.N
         println("Particle filter with $n (up to $(ps.N)) particles:")
     else
-        pritnln("Particle filter with $n particles:")
+        println("Particle filter with $n particles:")
     end
     showcompact(io, ps.particles)
 end
