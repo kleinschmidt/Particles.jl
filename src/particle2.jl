@@ -3,9 +3,9 @@ abstract type AbstractParticle end
 weight(p::AbstractParticle) = p.weight
 
 # a particle for parametric clustering
-struct Particle{P,S,A} <: AbstractParticle
+struct Particle{P,S} <: AbstractParticle
     components::Vector{Component{P,S}}
-    ancestor::A
+    ancestor::Union{Void,Particle}
     assignment::Int
     weight::Float64
 end
@@ -44,9 +44,9 @@ weight(p::Particle, w::Float64) = Particle(p.components, p.ancestor, p.assignmen
 An InfiniteParticle holds a potentially infinite number of components,
 potentially expanding every time it generates putatives.
 """
-mutable struct InfiniteParticle{P,S,A} <: AbstractParticle
+mutable struct InfiniteParticle{P,S} <: AbstractParticle
     components::Vector{Component{P,S}}
-    ancestor::A
+    ancestor::Union{Void,InfiniteParticle}
     assignment::Int
     weight::Float64
     prior::Component{P,S}
