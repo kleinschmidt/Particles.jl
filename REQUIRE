@@ -1,7 +1,6 @@
 julia 0.6
 ArgCheck
-OnlineStats
-OnlineStatsBase
 StatsBase
 Distributions
-ConjugatePriors
+ConjugatePriors 0.2.1
+ProgressMeter
