@@ -70,7 +70,8 @@ function fit!(ps::FearnheadParticles{P}, y::Float64) where P
         # resample the rest:
         wsample!(view(putative, ci:M),          # draw from putative particles ci:M
                  ws[ci:M],                      # weight according to old weights
-                 view(ps.particles, ci:ps.N),   # draw ps.N-ci+1 particles and store in ps.particles
+                 view(ps.particles, ci:ps.N),   # draw ps.N-ci+1 particles and store
+                                                # in ps.particles
                  replace=false)                 # without replacement
 
         foreach(p->weight!(p, weight(p)/totalw), view(ps.particles, 1:ci-1))
