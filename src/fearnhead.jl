@@ -12,8 +12,8 @@ using ProgressMeter
 # really approrpiate here anyway...
 
 
-mutable struct FearnheadParticles
-    particles::Vector{AbstractParticle}
+mutable struct FearnheadParticles{P}
+    particles::Vector{P}
     N::Int
 end
 
@@ -120,3 +120,5 @@ end
 
 
 posterior_predictive(ps::FearnheadParticles) = MixtureModel(posterior_predictive.(ps.particles), weight.(ps.particles))
+
+assignments(ps::FearnheadParticles) = reduce(hcat, assignments(p) for p in ps.particles)

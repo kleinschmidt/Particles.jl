@@ -1,7 +1,9 @@
 abstract type AbstractParticle end
 
 weight(p::AbstractParticle) = p.weight
-components(p::AbstractParticle) = p.components
+Distributions.components(p::AbstractParticle) = p.components
+
+
 nobs(p::AbstractParticle) = sum(nobs(c) for c in components(p))
 Base.isempty(p::AbstractParticle) = all(nobs(c) == 0 for c in components(p))
 
@@ -143,3 +145,43 @@ function fit(p::InfiniteParticle, y::Real, x::Int)
 
     return InfiniteParticle(components, p, x, weight, p.prior, p.α)
 end
+
+
+
+Distributions.components(p::InfiniteParticle) = [p.components..., p.prior]
+
+weights(p::Particle) = ones(length(p.components)) ./ length(p.components)
+weights(p::InfiniteParticle) = (w = [Float64.(nobs.(p.components))..., p.α]; w ./= sum(w); w)
+#weights(p::InfiniteParticle) = (w = Float64.(push!(nobs.(p.components), p.α)); w ./= sum(w); w)
+
+"""
+    posterior_predictive(p::P) where P<:AbstractParticle
+
+Get the posterior predictive distribution for a particle, which is a mixture of
+the posterior predictives for each component (including the prior, for an
+`InfiniteParticle`).
+"""
+
+posterior_predictive(p::P) where P<:AbstractParticle =
+    MixtureModel(posterior_predictive.(components(p)), weights(p))
+
+"""
+    marginal_posterior(p::Particle)
+
+The (unnormalized) posterior probability of the parameters in `p` given the data
+`fit!` by it thus far.
+"""
+
+marginal_posterior(p::AbstractParticle) = exp(marginal_log_posterior(p))
+
+marginal_log_posterior(p::Particle) = sum(marginal_log_lhood(c) for c in components(p))
+function marginal_log_posterior(p::InfiniteParticle)
+    # prior is prod_i(α × (n_i-1)!) for each component i (since the prior is α
+    # for the first obs in a new cluster and n_i thereafter.
+    log_prior =
+        length(p.components) * log(p.α) +
+        sum(lgamma(nobs(c)) for c in p.components)
+    log_lhood = sum(marginal_log_lhood(c) for c in p.components)
+    return log_prior + log_lhood
+end
+

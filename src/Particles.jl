@@ -22,16 +22,13 @@ export
     putatives,
     weight,
     nobs,
-    assignments
-#     fit,
-#     # posterior_predictive,
-#     marginal_lhood,
-#     marginal_log_lhood,
-#     marginal_posterior,
-#     marginal_log_posterior,
-#     putatives,
+    assignments,
+    posterior_predictive,
+    marginal_lhood,
+    marginal_log_lhood,
+    marginal_posterior,
+    marginal_log_posterior
 #     normalize_clusters!,
-#     weight
 
 
 const DEBUG = false

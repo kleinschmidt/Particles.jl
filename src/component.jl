@@ -10,6 +10,10 @@ Base.show(io::IO, c::Component{P,S}) where {P,S} = print(io, "$P$(params(c)) w/ 
 
 posterior_predictive(gc::Component) =
     posterior_predictive(posterior_canon(gc.prior, gc.suffstats))
+
+posterior_predictive(d::NormalInverseChisq) =
+    LocationScale(d.μ, sqrt((1+d.κ)*d.σ2/d.κ), TDist(d.ν))
+
 Distributions.params(c::Component) = params(posterior_canon(c.prior, c.suffstats))
 
 
