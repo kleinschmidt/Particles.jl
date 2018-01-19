@@ -12,13 +12,15 @@ using Distributions: NormalStats
 using ConjugatePriors: posterior_canon, NormalInverseChisq
 
 export
+    FearnheadParticles,
     Particle,
+    InfiniteParticle,
     Component,
     NormalInverseChisq,
     fit,
-    putatives
-#     # InfiniteParticle,
-#     # FearnheadParticles,
+    fit!,
+    putatives,
+    weight
 #     fit,
 #     # posterior_predictive,
 #     marginal_lhood,
@@ -42,6 +44,6 @@ include("component.jl")
 include("particle2.jl")
 # include("nix2.jl")
 # include("particle.jl")
-# include("fearnhead.jl")
+include("fearnhead.jl")
 
 end # module

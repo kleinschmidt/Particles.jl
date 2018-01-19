@@ -12,9 +12,19 @@ using ProgressMeter
 # really approrpiate here anyway...
 
 
-mutable struct FearnheadParticles{P}
-    particles::Vector{P}
+mutable struct FearnheadParticles
+    particles::Vector{AbstractParticle}
     N::Int
+end
+
+function Base.show(io::IO, ps::FearnheadParticles)
+    n = length(ps.particles)
+    if n < ps.N
+        println("Particle filter with $n (up to $(ps.N)) particles:")
+    else
+        pritnln("Particle filter with $n particles:")
+    end
+    showcompact(io, ps.particles)
 end
 
 # Initialize population with a single, empty particle. (avoid redundancy)
@@ -48,7 +58,7 @@ end
 Filter a single observation with the population of particles in `ps`.
 
 """
-function fit!(ps::FearnheadParticles{P}, y::Float64) where P
+function fit!(ps::FearnheadParticles, y::Float64)
     # generate putative particles
     putative = mapreduce(p->putatives(p,y), vcat, Particle[], ps.particles)
     total_w = sum(weight(p) for p in putative)
@@ -64,18 +74,25 @@ function fit!(ps::FearnheadParticles{P}, y::Float64) where P
         ws = weight.(putative)
         ci, c, totalw = cutoff(ws, ps.N)
         @debug "  keeping $(ci-1) out of $M (cutoff=$c)"
-        ps.particles = Vector{P}(ps.N)
-        # propagate particles 1:ci-1
-        ps.particles[1:ci-1] .= putative[1:ci-1]
-        # resample the rest:
-        wsample!(view(putative, ci:M),          # draw from putative particles ci:M
-                 ws[ci:M],                      # weight according to old weights
-                 view(ps.particles, ci:ps.N),   # draw ps.N-ci+1 particles and store
-                                                # in ps.particles
-                 replace=false)                 # without replacement
+        ps.particles = typeof(ps.particles)(ps.N)
 
-        foreach(p->weight!(p, weight(p)/totalw), view(ps.particles, 1:ci-1))
-        foreach(p->weight!(p, c/totalw), view(ps.particles, ci:ps.N))
+        # propagate particles 1:ci-1
+        # ps.particles[1:ci-1] .= putative[1:ci-1]
+        for i in 1:ci-1
+            ps.particles[i] = weight(putative[i], weight(putative[i])/totalw)
+        end
+
+        # resample the rest:
+        wsample!(view(putative, ci:M),        # from putative particles ci:M...
+                 view(ws, ci:M),              # weighted according to old weights...
+                 view(ps.particles, ci:ps.N), # draw ps.N-ci+1 particles and store
+                                              # in ps.particles...
+                 replace=false)               # without replacement
+        # set weights
+        c /= totalw
+        for i in ci:ps.N
+            ps.particles[i] = weight(ps.particles[i], c)
+        end
         @debug "  total weight: $(sum(weight(p) for p in ps.particles))"
     end
     ps
@@ -84,7 +101,7 @@ end
 # just ignore weights in fit!
 fit!(ps::FearnheadParticles, y::Float64, w::Float64) = fit!(ps, y)
 
-function fit!(ps::FearnheadParticles{P}, ys::AbstractVector{Float64}) where P
+function fit!(ps::FearnheadParticles, ys::AbstractVector{Float64})
     @showprogress 1 "Fitting particles..." for y in ys
         fit!(ps, y)
     end

@@ -6,10 +6,11 @@ end
 Component(prior::NormalInverseChisq) = Component(prior, NormalStats(0,0,0,0))
 Component(params::NTuple{N,<:Real}) where N = Component(NormalInverseChisq(params...))
 
-Base.show(io::IO, c::Component{P,S}) where {P,S} = print(io, "$P with $(nobs(c)) observations")
+Base.show(io::IO, c::Component{P,S}) where {P,S} = print(io, "$P$(params(c)) w/ n=$(nobs(c))")
 
 posterior_predictive(gc::Component) =
     posterior_predictive(posterior_canon(gc.prior, gc.suffstats))
+Distributions.params(c::Component) = params(posterior_canon(c.prior, c.suffstats))
 
 
 # struct NormalStats <: SufficientStats
@@ -57,9 +58,9 @@ function marginal_lhood(c::Component{NormalInverseChisq{Float64}, NormalStats})
     μ0, σ20, κ0, ν0 = params(c.prior)
     μn, σ2n, κn, νn = params(posterior_canon(c.prior, c.suffstats))
     n = νn - ν0
-    gamma(νn*0.5)/gamma(ν0*0.5) * 
-        sqrt(κ0/κn) * 
-        (ν0*σ20)^(ν0*0.5) * (νn*σ2n)^(-νn*0.5) / 
+    gamma(νn*0.5)/gamma(ν0*0.5) *
+        sqrt(κ0/κn) *
+        (ν0*σ20)^(ν0*0.5) * (νn*σ2n)^(-νn*0.5) /
         π^(n*0.5)
 end
 
