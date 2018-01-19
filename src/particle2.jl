@@ -1,6 +1,19 @@
 abstract type AbstractParticle end
 
 weight(p::AbstractParticle) = p.weight
+components(p::AbstractParticle) = p.components
+nobs(p::AbstractParticle) = sum(nobs(c) for c in components(p))
+Base.isempty(p::AbstractParticle) = all(nobs(c) == 0 for c in components(p))
+
+function assignments(p::AbstractParticle)
+    asgns = Int[]
+    while !isempty(p)
+        push!(asgns, p.assignment)
+        p = p.ancestor
+    end
+    reverse!(asgns)
+end
+
 
 # a particle for parametric clustering
 struct Particle{P,S} <: AbstractParticle

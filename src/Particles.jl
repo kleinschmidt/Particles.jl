@@ -20,7 +20,9 @@ export
     fit,
     fit!,
     putatives,
-    weight
+    weight,
+    nobs,
+    assignments
 #     fit,
 #     # posterior_predictive,
 #     marginal_lhood,
