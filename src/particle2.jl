@@ -152,7 +152,6 @@ Distributions.components(p::InfiniteParticle) = [p.components..., p.prior]
 
 weights(p::Particle) = ones(length(p.components)) ./ length(p.components)
 weights(p::InfiniteParticle) = (w = [Float64.(nobs.(p.components))..., p.α]; w ./= sum(w); w)
-#weights(p::InfiniteParticle) = (w = Float64.(push!(nobs.(p.components), p.α)); w ./= sum(w); w)
 
 """
     posterior_predictive(p::P) where P<:AbstractParticle
@@ -185,3 +184,5 @@ function marginal_log_posterior(p::InfiniteParticle)
     return log_prior + log_lhood
 end
 
+# TODO: normalize clusters (sort based on mean, and re-write assignments, or
+# provide a view...

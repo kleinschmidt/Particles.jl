@@ -37,12 +37,8 @@ macro debug(msg)
     DEBUG ? :(println(string($(esc(msg))))) : nothing
 end
 
-
-# package code goes here
 include("component.jl")
 include("particle2.jl")
-# include("nix2.jl")
-# include("particle.jl")
 include("fearnhead.jl")
 
 end # module
