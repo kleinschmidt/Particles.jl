@@ -58,9 +58,14 @@ end
 Filter a single observation with the population of particles in `ps`.
 
 """
-function fit!(ps::FearnheadParticles, y::Float64)
+function fit!(ps::FearnheadParticles{P}, y::Float64) where P
     # generate putative particles
-    putative = mapreduce(p->putatives(p,y), vcat, Particle[], ps.particles)
+    putative = P[]
+    for p in ps.particles
+        for pp in putatives(p,y)
+            push!(putative, pp)
+        end
+    end
     total_w = sum(weight(p) for p in putative)
 
     M = length(putative)
@@ -70,7 +75,7 @@ function fit!(ps::FearnheadParticles, y::Float64)
     else
         @debug "  M=$M: More than N=$(ps.N): Resampling"
         # resample down to N particles
-        sort!(putative, by=weight, rev=true)
+        sort!(putative, alg=QuickSort, by=weight, rev=true)
         ws = weight.(putative)
         ci, c, totalw = cutoff(ws, ps.N)
         @debug "  keeping $(ci-1) out of $M (cutoff=$c)"

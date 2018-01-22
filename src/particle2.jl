@@ -48,7 +48,7 @@ function fit(p::Particle, y::Float64, x::Int)
     Particle(comps, p, x, p.weight * exp(new_llhood - old_llhood))
 end
 
-putatives(p::Particle, y::Float64) = [fit(p, y, x) for x in eachindex(p.components)]
+putatives(p::Particle, y::Float64) = (fit(p, y, x) for x in eachindex(p.components))
 
 weight(p::Particle, w::Float64) = Particle(p.components, p.ancestor, p.assignment, w)
 # now we have a problem: need to be able to change weight of particle...
@@ -90,7 +90,7 @@ InfiniteParticle(prior, α::Float64) = InfiniteParticle(Component(prior), α)
 weight(p::InfiniteParticle, w::Float64) =
     InfiniteParticle(p.components, p.ancestor, p.assignment, w, p.prior, p.α)
 
-putatives(p::InfiniteParticle, y::Real) = [fit(p, y, j) for j in 1:length(p.components)+1]
+putatives(p::InfiniteParticle, y::Real) = (fit(p, y, j) for j in 1:length(p.components)+1)
 
 """
     fit(p::InfiniteParticle, y::Real, x::Int)
