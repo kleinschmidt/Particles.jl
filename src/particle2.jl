@@ -51,7 +51,7 @@ putatives(p::Particle, y::Float64) = (fit(p, y, x) for x in eachindex(p.componen
 
 weight(p::Particle, w::Float64) = Particle(p.components, p.ancestor, p.assignment, w)
 
-ncomponents(p::Particle) = length(p.components)
+Distributions.ncomponents(p::Particle) = length(p.components)
 
 """
 An InfiniteParticle holds a potentially infinite number of components,
@@ -147,7 +147,7 @@ end
 
 
 Distributions.components(p::InfiniteParticle) = [p.components..., p.prior]
-ncomponents(p::InfiniteParticle, includeprior::Bool=false) = length(p.components) + includeprior
+Distributions.ncomponents(p::InfiniteParticle, includeprior::Bool=false) = length(p.components) + includeprior
 
 weights(p::Particle) = ones(length(p.components)) ./ length(p.components)
 weights(p::InfiniteParticle) = (w = [Float64.(nobs.(p.components))..., p.α]; w ./= sum(w); w)

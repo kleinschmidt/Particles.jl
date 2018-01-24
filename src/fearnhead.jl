@@ -103,12 +103,15 @@ function fit!(ps::FearnheadParticles{P}, y::Float64) where P
     ps
 end
 
-# just ignore weights in fit!
-fit!(ps::FearnheadParticles, y::Float64, w::Float64) = fit!(ps, y)
-
-function fit!(ps::FearnheadParticles, ys::AbstractVector{Float64})
-    @showprogress 1 "Fitting particles..." for y in ys
-        fit!(ps, y)
+function fit!(ps::FearnheadParticles, ys::AbstractVector{Float64}, progress=true)
+    if progress
+        @showprogress 1 "Fitting particles..." for y in ys
+            fit!(ps, y)
+        end
+    else
+        for y in ys
+            fit!(ps, y)
+        end
     end
     ps
 end
