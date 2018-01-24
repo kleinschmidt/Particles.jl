@@ -27,7 +27,8 @@ export
     marginal_lhood,
     marginal_log_lhood,
     marginal_posterior,
-    marginal_log_posterior
+    marginal_log_posterior,
+    ncomponents_dist
 #     normalize_clusters!,
 
 

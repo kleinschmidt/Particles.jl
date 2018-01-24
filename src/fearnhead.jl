@@ -127,3 +127,13 @@ end
 posterior_predictive(ps::FearnheadParticles) = MixtureModel(posterior_predictive.(ps.particles), weight.(ps.particles))
 
 assignments(ps::FearnheadParticles) = reduce(hcat, assignments(p) for p in ps.particles)
+
+function ncomponents_dist(ps::FearnheadParticles)
+    ncomps = ncomponents.(ps.particles)
+    weights = [p.weight for p in ps.particles]
+    comp_ps = zeros(maximum(ncomps))
+    for (n,w) in zip(ncomps, weights)
+        comp_ps[n] += w
+    end
+    Categorical(comp_ps ./ sum(comp_ps))
+end
