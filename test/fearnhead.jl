@@ -33,6 +33,10 @@
         keep, cut, tot = cutoff(ws, 10)
         # @show cutoff_normalized(ws,10)[2], cut, tot,  cut/tot
 
+        # check correctness of the algorithm:  should be the case that
+        # \sum_i=1^M min( c*w_i, 1 ) = N
+        @test isapprox(sum(min.(ws ./ cut, 1)), 10, atol=1e-5)
+
         @test isapprox(cutoff_normalized(ws, 10)[2], cut/tot, atol=1e-10)
         @test isapprox(cutoff_while(ws, 10)[2], cut/tot, atol=1e-10)
 
