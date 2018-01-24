@@ -10,6 +10,7 @@ import StatsBase: fit!, fit
 
 using Distributions: NormalStats
 using ConjugatePriors: posterior_canon, NormalInverseChisq
+using StatsBase: Weights
 
 export
     FearnheadParticles,
@@ -17,6 +18,7 @@ export
     InfiniteParticle,
     Component,
     NormalInverseChisq,
+    GibbsCRP,
     fit,
     fit!,
     putatives,
@@ -28,7 +30,8 @@ export
     marginal_log_lhood,
     marginal_posterior,
     marginal_log_posterior,
-    ncomponents_dist
+    ncomponents_dist,
+    sample!
 #     normalize_clusters!,
 
 
@@ -41,5 +44,6 @@ end
 include("component.jl")
 include("particle2.jl")
 include("fearnhead.jl")
+include("gibbs.jl")
 
 end # module
