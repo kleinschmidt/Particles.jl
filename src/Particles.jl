@@ -3,33 +3,36 @@ module Particles
 using
     Distributions,
     ConjugatePriors,
-    OnlineStatsBase,
-    OnlineStats,
     StatsBase,
     ArgCheck
 
-import StatsBase: fit!
+import StatsBase: fit!, fit
 
 using Distributions: NormalStats
 using ConjugatePriors: posterior_canon, NormalInverseChisq
-using OnlineStats: Variance, nobs, EqualWeight
-using OnlineStatsBase: ExactStat
+using StatsBase: Weights
 
 export
-    Series,
-    FitNormalInverseChisq,
+    FearnheadParticles,
     Particle,
     InfiniteParticle,
-    FearnheadParticles,
+    Component,
+    NormalInverseChisq,
+    GibbsCRP,
+    fit,
     fit!,
+    putatives,
+    weight,
+    nobs,
+    assignments,
     posterior_predictive,
     marginal_lhood,
     marginal_log_lhood,
     marginal_posterior,
     marginal_log_posterior,
-    putatives,
-    normalize_clusters!,
-    weight
+    ncomponents_dist,
+    sample!
+#     normalize_clusters!,
 
 
 const DEBUG = false
@@ -38,10 +41,9 @@ macro debug(msg)
     DEBUG ? :(println(string($(esc(msg))))) : nothing
 end
 
-
-# package code goes here
-include("nix2.jl")
-include("particle.jl")
+include("component.jl")
+include("particle2.jl")
 include("fearnhead.jl")
+include("gibbs.jl")
 
 end # module

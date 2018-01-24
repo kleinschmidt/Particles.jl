@@ -1,8 +1,30 @@
 using ProgressMeter
 
-mutable struct FearnheadParticles{P} <: ExactStat{0}
+# some potential optimizations: 
+# * make particles themselves immutable and avoid copying
+# * keep track of assignments at population level, not particles (no need to
+#   copy vectors on particle copy/propogation, just update stats)
+# * use ancestor indices to link from one iteration to the next. (take advantage
+#   of shared ancestry).  requires reconstructing the full assignment vectors
+#   afterwards but who cares at that point.
+#
+# all of this means we can get rid of hte online stat thing...I don't know it's
+# really approrpiate here anyway...
+
+
+mutable struct FearnheadParticles{P}
     particles::Vector{P}
     N::Int
+end
+
+function Base.show(io::IO, ps::FearnheadParticles)
+    n = length(ps.particles)
+    if n < ps.N
+        println("Particle filter with $n (up to $(ps.N)) particles:")
+    else
+        println("Particle filter with $n particles:")
+    end
+    showcompact(io, ps.particles)
 end
 
 # Initialize population with a single, empty particle. (avoid redundancy)
@@ -38,7 +60,12 @@ Filter a single observation with the population of particles in `ps`.
 """
 function fit!(ps::FearnheadParticles{P}, y::Float64) where P
     # generate putative particles
-    putative = mapreduce(p->putatives(p,y), vcat, Particle[], ps.particles)
+    putative = P[]
+    for p in ps.particles
+        for pp in putatives(p,y)
+            push!(putative, pp)
+        end
+    end
     total_w = sum(weight(p) for p in putative)
 
     M = length(putative)
@@ -48,21 +75,29 @@ function fit!(ps::FearnheadParticles{P}, y::Float64) where P
     else
         @debug "  M=$M: More than N=$(ps.N): Resampling"
         # resample down to N particles
-        sort!(putative, by=weight, rev=true)
+        sort!(putative, alg=QuickSort, by=weight, rev=true)
         ws = weight.(putative)
         ci, c, totalw = cutoff(ws, ps.N)
         @debug "  keeping $(ci-1) out of $M (cutoff=$c)"
-        ps.particles = Vector{P}(ps.N)
-        # propagate particles 1:ci-1
-        ps.particles[1:ci-1] .= putative[1:ci-1]
-        # resample the rest:
-        wsample!(view(putative, ci:M),          # draw from putative particles ci:M
-                 ws[ci:M],                      # weight according to old weights
-                 view(ps.particles, ci:ps.N),   # draw ps.N-ci+1 particles and store in ps.particles
-                 replace=false)                 # without replacement
+        ps.particles = typeof(ps.particles)(ps.N)
 
-        foreach(p->weight!(p, weight(p)/totalw), view(ps.particles, 1:ci-1))
-        foreach(p->weight!(p, c/totalw), view(ps.particles, ci:ps.N))
+        # propagate particles 1:ci-1
+        # ps.particles[1:ci-1] .= putative[1:ci-1]
+        for i in 1:ci-1
+            ps.particles[i] = weight(putative[i], weight(putative[i])/totalw)
+        end
+
+        # resample the rest:
+        wsample!(view(putative, ci:M),        # from putative particles ci:M...
+                 view(ws, ci:M),              # weighted according to old weights...
+                 view(ps.particles, ci:ps.N), # draw ps.N-ci+1 particles and store
+                                              # in ps.particles...
+                 replace=false)               # without replacement
+        # set weights
+        c /= totalw
+        for i in ci:ps.N
+            ps.particles[i] = weight(ps.particles[i], c)
+        end
         @debug "  total weight: $(sum(weight(p) for p in ps.particles))"
     end
     ps
@@ -71,7 +106,7 @@ end
 # just ignore weights in fit!
 fit!(ps::FearnheadParticles, y::Float64, w::Float64) = fit!(ps, y)
 
-function fit!(ps::FearnheadParticles{P}, ys::AbstractVector{Float64}) where P
+function fit!(ps::FearnheadParticles, ys::AbstractVector{Float64})
     @showprogress 1 "Fitting particles..." for y in ys
         fit!(ps, y)
     end
@@ -90,3 +125,15 @@ end
 
 
 posterior_predictive(ps::FearnheadParticles) = MixtureModel(posterior_predictive.(ps.particles), weight.(ps.particles))
+
+assignments(ps::FearnheadParticles) = reduce(hcat, assignments(p) for p in ps.particles)
+
+function ncomponents_dist(ps::FearnheadParticles)
+    ncomps = ncomponents.(ps.particles)
+    weights = [p.weight for p in ps.particles]
+    comp_ps = zeros(maximum(ncomps))
+    for (n,w) in zip(ncomps, weights)
+        comp_ps[n] += w
+    end
+    Categorical(comp_ps ./ sum(comp_ps))
+end
