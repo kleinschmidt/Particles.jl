@@ -5,7 +5,7 @@
         p = InfiniteParticle((0., 1., 0.1, 0.1), 2.0)
         ps = [p]
         for x in 1.:5.
-            ps = vcat(putatives.(ps, x)...)
+            ps = vcat(collect.(putatives.(ps, x))...)
             @test weight.(ps) ≈ marginal_posterior.(ps)
         end
     end
