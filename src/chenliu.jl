@@ -22,11 +22,11 @@ end
 
 # initialize with full population of empty particles, because this method
 # doens't benefit from redundancy in the same way as the Fearnhead method does
-ChenLiuParticles(n::Int, prior::Union{Tuple,<:Distribution}, α::Float64) =
-    ChenLiuParticles([InfiniteParticle(prior, α) for _ in 1:n], n)
+ChenLiuParticles(n::Int, prior::Union{Tuple,<:Distribution}, α::Float64, rejuv::Float64) =
+    ChenLiuParticles([InfiniteParticle(prior, α) for _ in 1:n], n, rejuv)
 
 function propogate_chenliu(p::InfiniteParticle, y::Float64)
-    ps = putatives(p, y)
+    ps = collect(putatives(p, y))
     # sample next based on updated weights (which are proportional to the
     # posterior p( (z_1:n, j) | x_1:n+1 ) because they've been updated based on
     # the same ancestor, multiplying by
@@ -57,8 +57,8 @@ function fit!(ps::ChenLiuParticles, y::Float64)
     ws = weight.(ps.particles)
     cv = coefvar(ws)
     if cv > ps.rejuvination_threshold
-        @debug "  Rejuvinating ($cv > $(ps.rejuvination_threhold))"
-        ps.particles = wsample(ps.particles, weight.(ps.particles), ps.N, replace=true)
+        @debug "  Rejuvinating ($cv > $(ps.rejuvination_threshold))"
+        ps.particles = weight.(wsample(ps.particles, weight.(ps.particles), ps.N, replace=true), 1/ps.N)
     end
     ps
 end

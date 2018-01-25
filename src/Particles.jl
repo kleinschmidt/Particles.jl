@@ -26,6 +26,7 @@ export
     putatives,
     weight,
     nobs,
+    particles,
     assignments,
     posterior_predictive,
     marginal_lhood,
