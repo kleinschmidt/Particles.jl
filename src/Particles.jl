@@ -13,7 +13,9 @@ using ConjugatePriors: posterior_canon, NormalInverseChisq
 using StatsBase: Weights
 
 export
+    ParticleFilter,
     FearnheadParticles,
+    ChenLiuParticles,
     Particle,
     InfiniteParticle,
     Component,

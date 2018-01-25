@@ -1,5 +1,3 @@
-using ProgressMeter
-
 # some potential optimizations: 
 # * make particles themselves immutable and avoid copying
 # * keep track of assignments at population level, not particles (no need to

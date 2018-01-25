@@ -1,4 +1,6 @@
-abstract ParticleFilter end
+using ProgressMeter
+
+abstract type ParticleFilter end
 
 function fit!(ps::ParticleFilter, ys::AbstractVector{Float64}, progress=true)
     if progress

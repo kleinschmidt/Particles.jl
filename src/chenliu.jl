@@ -4,7 +4,7 @@
 # sample one successor proportional to p((z_1:n^i, j) | x_1:n+1)
 # assign weight based on sum_1^k_i+1(p((z_1:n^i, j) | x_1:n+1)/p(z_1:n^i | x_1:n))
 
-mutable struct ChenLiuParticles{P} <: ParticleFilter{P}
+mutable struct ChenLiuParticles{P} <: ParticleFilter
     particles::Vector{P}
     N::Int
     rejuvination_threshold::Float64
