@@ -3,33 +3,28 @@
 addprocs(11)
 
 @everywhere begin
-    using ParallelDataTransfer
-    using Particles
+    using ParallelDataTransfer, Particles, Distributions, StatsBase
     using Particles: ncomponents
-    using Distributions
     using Distributions: MixtureModel
     using ConjugatePriors: NormalInverseGamma, NormalInverseChisq
 
     function m_m2(ps::FearnheadParticles)
         ns = ncomponents.(ps.particles)
-        ws = weight.(ps.particles)
-        ws ./= sum(ws)
-        (ns ⋅ ws, ns.^2 ⋅ ws)
+        ws = Weights(weight.(ps.particles))
+        (mean(ns, ws), var(ns, ws))
     end
 
     function m_m2(gc::GibbsCRP, n; burnin=500)
         for _ in 1:burnin
             sample!(gc)
         end
-        m = 0
-        m2 = 0
+        ns = Int[]
         for _ in 1:n
             sample!(gc)
             ncomp = length(gc.components) - length(gc.empties)
-            m += ncomp
-            m2 += ncomp^2
+            push!(ns, ncomp)
         end
-        (m / n, m2 / n)
+        (mean(ns), var(ns))
     end
 
     n_samp = 5000
@@ -47,8 +42,7 @@ function ess(f::Function; n::Int=100)
         srand(i)
         ms[i], m2s[i] = f()
     end
-    mbar = mean(ms)
-    return (mean(m2s) - mbar^2) / mean((ms .- mbar).^2)
+    return mean(m2s) / var(ms)
 end
 
 results = []
