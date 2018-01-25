@@ -12,7 +12,7 @@ using ProgressMeter
 # really approrpiate here anyway...
 
 
-mutable struct FearnheadParticles{P}
+mutable struct FearnheadParticles{P} <: ParticleFilter
     particles::Vector{P}
     N::Int
 end
@@ -103,20 +103,6 @@ function fit!(ps::FearnheadParticles{P}, y::Float64) where P
     ps
 end
 
-function fit!(ps::FearnheadParticles, ys::AbstractVector{Float64}, progress=true)
-    if progress
-        @showprogress 1 "Fitting particles..." for y in ys
-            fit!(ps, y)
-        end
-    else
-        for y in ys
-            fit!(ps, y)
-        end
-    end
-    ps
-end
-
-
 function normalize_clusters!(ps::FearnheadParticles, method::Symbol)
     if method == :sort
         sort!.(ps.particles)
@@ -124,19 +110,4 @@ function normalize_clusters!(ps::FearnheadParticles, method::Symbol)
         throw(ArgumentError("Method $method not supported"))
     end
     return ps
-end
-
-
-posterior_predictive(ps::FearnheadParticles) = MixtureModel(posterior_predictive.(ps.particles), weight.(ps.particles))
-
-assignments(ps::FearnheadParticles) = reduce(hcat, assignments(p) for p in ps.particles)
-
-function ncomponents_dist(ps::FearnheadParticles)
-    ncomps = ncomponents.(ps.particles)
-    weights = [p.weight for p in ps.particles]
-    comp_ps = zeros(maximum(ncomps))
-    for (n,w) in zip(ncomps, weights)
-        comp_ps[n] += w
-    end
-    Categorical(comp_ps ./ sum(comp_ps))
 end

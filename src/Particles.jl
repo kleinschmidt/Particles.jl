@@ -43,7 +43,9 @@ end
 
 include("component.jl")
 include("particle2.jl")
+include("filters.jl")
 include("fearnhead.jl")
+include("chenliu.jl")
 include("gibbs.jl")
 
 end # module
