@@ -30,13 +30,5 @@ function assignments(p::ParticleFilter)
     asgn
 end
 
-function ncomponents_dist(p::ParticleFilter)
-    ps = particles(p)
-    ncomps = ncomponents.(ps)
-    weights = weight.(ps)
-    comp_ps = zeros(maximum(ncomps))
-    for (n,w) in zip(ncomps, weights)
-        comp_ps[n] += w
-    end
-    Categorical(comp_ps ./ sum(comp_ps))
-end
+ncomponents_dist(p::ParticleFilter) =
+    fit(Categorical, ncomponents.(p.particles), weight.(p.particles))

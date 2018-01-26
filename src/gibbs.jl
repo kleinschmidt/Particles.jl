@@ -81,8 +81,44 @@ function StatsBase.sample!(gc::GibbsCRP, i::Int)
 end
 
 function StatsBase.sample!(gc::GibbsCRP)
+    @argcheck !isempty(gc.data) "can't sample from Gibbs sampler with empty .data field"
     for i in 1:length(gc.data)
         sample!(gc, i)
     end
     return gc
 end
+
+
+mutable struct GibbsCRPSamples
+    g::GibbsCRP
+    assignments::Matrix{Int}
+    components::Vector{Vector{Component}}
+end
+
+function fit!(gc::GibbsCRP, progress=true;
+              samples=5000, burnin=samples÷10)
+    assignments = Matrix{Int}(length(gc.data), samples)
+    components = Vector{Vector{Component}}()
+    for _ in 1:burnin
+        sample!(gc)
+    end
+    if progress
+        @showprogress 1 "Gibbs sampling" for i in 1:samples
+            sample!(gc)
+            assignments[:,i] .= gc.assignments
+            push!(components, copy(gc.components))
+        end
+    else
+        for i in 1:samples
+            sample!(gc)
+            assignments[:,i] .= gc.assignments
+            push!(components, copy(gc.components))
+        end
+    end
+    GibbsCRPSamples(gc, assignments, components)
+end
+
+assignments(gf::GibbsCRPSamples) = gf.assignments
+ncomponents_dist(gf::GibbsCRPSamples) =
+    fit(Categorical, mapslices(x -> length(unique(x)), gf.assignments, 1))
+
