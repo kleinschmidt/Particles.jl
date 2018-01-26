@@ -102,18 +102,11 @@ function fit!(gc::GibbsCRP, progress=true;
     for _ in 1:burnin
         sample!(gc)
     end
-    if progress
-        @showprogress 1 "Gibbs sampling" for i in 1:samples
-            sample!(gc)
-            assignments[:,i] .= gc.assignments
-            push!(components, copy(gc.components))
-        end
-    else
-        for i in 1:samples
-            sample!(gc)
-            assignments[:,i] .= gc.assignments
-            push!(components, copy(gc.components))
-        end
+
+    @showprogress (progress ? 1 : Inf) "Gibbs sampling" for i in 1:samples
+        sample!(gc)
+        assignments[:,i] .= gc.assignments
+        push!(components, copy(gc.components))
     end
     GibbsCRPSamples(gc, assignments, components)
 end

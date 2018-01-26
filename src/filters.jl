@@ -3,14 +3,8 @@ using ProgressMeter
 abstract type ParticleFilter end
 
 function fit!(ps::ParticleFilter, ys::AbstractVector{Float64}, progress=true)
-    if progress
-        @showprogress 1 "Fitting particles..." for y in ys
-            fit!(ps, y)
-        end
-    else
-        for y in ys
-            fit!(ps, y)
-        end
+    @showprogress (progress ? 1 : Inf) "Fitting particles..." for y in ys
+        fit!(ps, y)
     end
     ps
 end
