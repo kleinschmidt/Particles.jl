@@ -115,3 +115,4 @@ assignments(gf::GibbsCRPSamples) = gf.assignments
 ncomponents_dist(gf::GibbsCRPSamples) =
     fit(Categorical, mapslices(x -> length(unique(x)), gf.assignments, 1))
 
+marginal_log_posterior(g::GibbsCRP) = marginal_log_posterior(g.components, g.logα)

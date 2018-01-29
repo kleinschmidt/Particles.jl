@@ -173,13 +173,15 @@ The (unnormalized) posterior probability of the parameters in `p` given the data
 marginal_posterior(p::AbstractParticle) = exp(marginal_log_posterior(p))
 
 marginal_log_posterior(p::Particle) = sum(marginal_log_lhood(c) for c in components(p))
-function marginal_log_posterior(p::InfiniteParticle)
+marginal_log_posterior(p::InfiniteParticle) = marginal_log_posterior(p.components, log(p.α))
+
+function marginal_log_posterior(cs::AbstractVector{Component}, logα::Float64)
     # prior is prod_i(α × (n_i-1)!) for each component i (since the prior is α
     # for the first obs in a new cluster and n_i thereafter.
     log_prior =
-        length(p.components) * log(p.α) +
-        sum(lgamma(nobs(c)) for c in p.components)
-    log_lhood = sum(marginal_log_lhood(c) for c in p.components)
+        length(cs) * logα +
+        sum(lgamma(nobs(c)) for c in cs)
+    log_lhood = sum(marginal_log_lhood(c) for c in cs)
     return log_prior + log_lhood
 end
 

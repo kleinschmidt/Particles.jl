@@ -21,6 +21,7 @@ export
     Component,
     NormalInverseChisq,
     GibbsCRP,
+    GibbsCRPSamples,
     fit,
     fit!,
     putatives,
