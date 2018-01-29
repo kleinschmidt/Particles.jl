@@ -22,7 +22,7 @@ end
 
 # initialize with full population of empty particles, because this method
 # doens't benefit from redundancy in the same way as the Fearnhead method does
-ChenLiuParticles(n::Int, prior::Union{Tuple,<:Distribution}, α::Float64, rejuv::Float64) =
+ChenLiuParticles(n::Int, prior::Union{Tuple,<:Distribution}, α::Float64; rejuv::Float64=50.) =
     ChenLiuParticles([InfiniteParticle(prior, α) for _ in 1:n], n, rejuv)
 
 function propogate_chenliu(p::InfiniteParticle, y::Float64)
