@@ -175,7 +175,7 @@ marginal_posterior(p::AbstractParticle) = exp(marginal_log_posterior(p))
 marginal_log_posterior(p::Particle) = sum(marginal_log_lhood(c) for c in components(p))
 marginal_log_posterior(p::InfiniteParticle) = marginal_log_posterior(p.components, log(p.α))
 
-function marginal_log_posterior(cs::AbstractVector{Component}, logα::Float64)
+function marginal_log_posterior(cs::AbstractVector{Component{P,S}}, logα::Float64) where {P,S}
     # prior is prod_i(α × (n_i-1)!) for each component i (since the prior is α
     # for the first obs in a new cluster and n_i thereafter.
     log_prior =
