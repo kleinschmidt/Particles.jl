@@ -37,6 +37,10 @@ end
 
 Base.showcompact(io::IO, p::Particle) = print(io, "$(length(p.components))-Particle")
 
+Particle(priors::AbstractVector{D}) where D<:Distribution = 
+    Particle(Component.(priors), nothing, 0, 1.0)
+Particle(priors::D...) where D<:Distribution =
+    Particle([Component.(priors)...], nothing, 0, 1.0)
 Particle(params::NTuple{4,<:Real}...) = Particle([Component.(params)...], nothing, 0, 1.0)
 
 function fit(p::Particle, y::Float64, x::Int)

@@ -11,8 +11,10 @@ end
 
 particles(p::ParticleFilter) = p.particles
 
+normalize!(x) = (x ./= sum(x))
+
 posterior_predictive(p::ParticleFilter) =
-    MixtureModel(posterior_predictive.(particles(p)), weight.(particles(p)))
+    MixtureModel(posterior_predictive.(particles(p)), normalize!(weight.(particles(p))))
 
 function assignments(p::ParticleFilter)
     ps = particles(p)

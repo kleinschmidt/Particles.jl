@@ -22,10 +22,12 @@ end
 
 # initialize with full population of empty particles, because this method
 # doens't benefit from redundancy in the same way as the Fearnhead method does
+ChenLiuParticles(n::Int, priors::Union{Tuple,<:Distributions}...; rejuv::Float64=50.) =
+    ChenLiuParticles([Particle(priors...) for _ in 1:n], n, rejuv)
 ChenLiuParticles(n::Int, prior::Union{Tuple,<:Distribution}, α::Float64; rejuv::Float64=50.) =
     ChenLiuParticles([InfiniteParticle(prior, α) for _ in 1:n], n, rejuv)
 
-function propogate_chenliu(p::InfiniteParticle, y::Float64)
+function propogate_chenliu(p::P, y::Float64) where P<:AbstractParticle
     ps = collect(putatives(p, y))
     # sample next based on updated weights (which are proportional to the
     # posterior p( (z_1:n, j) | x_1:n+1 ) because they've been updated based on
