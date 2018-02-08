@@ -61,6 +61,11 @@ function fit!(ps::ChenLiuParticles, y::Float64)
     if cv > ps.rejuvination_threshold
         @debug "  Rejuvinating ($cv > $(ps.rejuvination_threshold))"
         ps.particles = weight.(wsample(ps.particles, weight.(ps.particles), ps.N, replace=true), 1/ps.N)
+    else
+        # normalize weights to prevent underflow
+        # TODO: use log-weight instead to avoid this altogether
+        total_w = sum(ws)
+        ps.particles = weight.(ps.particles, ws ./ total_w)
     end
     ps
 end
