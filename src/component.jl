@@ -54,6 +54,27 @@ function sub(ss::NormalStats, x)
     end
 end
 
+function add(ss::MvNormalStats, x::AbstractVector)
+    tw = ss.tw + 1
+    Δ = x - ss.m
+    m = ss.m + Δ/tw
+    s2 = tw>1 ? ss.s2 + Δ*(x.-m)' : zeros(size(ss.s2))
+    return MvNormalStats(ss.s+x, m, s2, tw)
+end
+
+function sub(ss::MvNormalStats, x::AbstractVector)
+    tw = ss.tw-1
+    if tw ≤ 0
+        n = length(ss.m)
+        return MvNormalStats(zeros(n), zeros(n), zeros(n,n), 0)
+    else
+        Δ = x - ss.m
+        m = ss.m - Δ./tw
+        s2 = ss.s2 - Δ*(x-m)'
+        return MvNormalStats(ss.s-x, m, s2, tw)
+    end
+end
+
 add(c::Component, x) = Component(c.prior, add(c.suffstats, x))
 sub(c::Component, x) = Component(c.prior, sub(c.suffstats, x))
 

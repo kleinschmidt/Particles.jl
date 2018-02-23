@@ -8,7 +8,7 @@ using
 
 import StatsBase: fit!, fit
 
-using Distributions: NormalStats
+using Distributions: NormalStats, MvNormalStats
 using ConjugatePriors: posterior_canon, NormalInverseChisq, NormalInverseWishart
 using StatsBase: Weights
 
