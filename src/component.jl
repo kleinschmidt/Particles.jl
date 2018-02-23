@@ -14,6 +14,12 @@ posterior_predictive(gc::Component) =
 posterior_predictive(d::NormalInverseChisq) =
     LocationScale(d.μ, sqrt((1+d.κ)*d.σ2/d.κ), TDist(d.ν))
 
+function posterior_predictive(d::NormalInverseWishart)
+    df = d.nu - length(d.mu) + 1
+    Λ = d.Lamchol[:U]'*d.Lamchol[:U]
+    MvTDist(df, d.mu, Λ*(d.kappa+1)/(d.kappa*df))
+end
+
 Distributions.logpdf(c::Component, x) = logpdf(posterior_predictive(c), x)
 Distributions.pdf(c::Component, x) = logpdf(posterior_predictive(c), x)
 

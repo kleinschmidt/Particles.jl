@@ -9,7 +9,7 @@ using
 import StatsBase: fit!, fit
 
 using Distributions: NormalStats
-using ConjugatePriors: posterior_canon, NormalInverseChisq
+using ConjugatePriors: posterior_canon, NormalInverseChisq, NormalInverseWishart
 using StatsBase: Weights
 
 export
