@@ -101,6 +101,9 @@ function marginal_lhood(prior::NormalInverseChisq{Float64}, suffstats::NormalSta
         π^(n*0.5)
 end
 
+marginal_lhood(prior::NormalInverseWishart, suffstats::MvNormalStats) =
+    exp(marginal_log_lhood(prior, suffstats))
+
 """
     marginal_log_lhood(c::Component)
 
@@ -118,4 +121,16 @@ function marginal_log_lhood(prior::NormalInverseChisq{Float64}, suffstats::Norma
         0.5*(log(κ0)-log(κn)) +
         (0.5*ν0)*(log(ν0)+log(σ20)) - (0.5*νn)*(log(νn)+log(σ2n)) -
         (0.5*n)*log(π)
+end
+
+function marginal_log_lhood(prior::NormalInverseWishart, suffstats::MvNormalStats)
+    μ0, Λchol0, κ0, ν0 = params(prior)
+    μn, Λcholn, κn, νn = params(posterior_canon(prior, suffstats))
+    n = νn - ν0
+    d = length(μ0)
+    
+    (-0.5*n*d) * logπ +
+        logmvgamma(d, νn*0.5) - logmvgamma(d, ν0*0.5) +
+        logdet(Λchol0)*ν0*0.5 - logdet(Λcholn)*νn*0.5 +
+        d*0.5*(log(κ0) - log(κn))
 end
