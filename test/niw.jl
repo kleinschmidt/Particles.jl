@@ -35,7 +35,7 @@ ConjugatePriors.NormalInverseWishart(nix2::NormalInverseChisq) =
         @test isapprox(marginal_log_lhood(prior, ss), log(mean(exp.(logpdfs))), rtol=0.001)
         # sanity check: lhood under samples from prior is more variable than
         # error from analytical expression
-        @test std(logpdfs) > marginal_log_lhood(prior, ss) - log(mean(exp.(logpdfs)))
+        @test std(logpdfs) > abs(marginal_log_lhood(prior, ss) - log(mean(exp.(logpdfs))))
     end
 
     # I think the parameter space is too high-dimensional to have any hope of
