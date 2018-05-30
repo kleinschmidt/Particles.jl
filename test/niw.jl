@@ -20,16 +20,23 @@ ConjugatePriors.NormalInverseWishart(nix2::NormalInverseChisq) =
         isapprox(mean(d_pp_samps, 2), mean(pp_samps, 2), atol=0.01)
     end
 
-    #=
     @testset "Marginal likelihood" begin
+        srand(1001)
+
+        prior = NormalInverseWishart([0., 1.], 10., eye(2), 50.)
+        x = rand(MvNormal(rand(prior)...), 10)
+        ss = suffstats(MvNormal, x)
+        # this is trivially true at the moment since one just calls the other
         @test marginal_log_lhood(prior, ss) ≈ log(marginal_lhood(prior, ss))
         xvecs = [x[:,i] for i in 1:size(x,2)]
         logpdfs = [sum(logpdf.(MvNormal(prior_samp...), xvecs))
                    for prior_samp
                    in (rand(prior) for _ in 1:100_000)]
         @test isapprox(marginal_log_lhood(prior, ss), log(mean(exp.(logpdfs))), rtol=0.001)
+        # sanity check: lhood under samples from prior is more variable than
+        # error from analytical expression
+        @test std(logpdfs) > marginal_log_lhood(prior, ss) - log(mean(exp.(logpdfs)))
     end
-    =#
 
     # I think the parameter space is too high-dimensional to have any hope of
     # testing reliably with sampling like this.  Next best is to check against
