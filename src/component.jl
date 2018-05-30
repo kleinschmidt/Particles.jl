@@ -88,8 +88,10 @@ Base.isempty(c::Component) = nobs(c) == 0
 The marginal likelihood of data fit so far by `o`, which is the integral of the
 likelihood given the mean and variance under the prior on those parameters.
 """
-marginal_lhood(c::Component{NormalInverseChisq{Float64}, NormalStats}) =
+marginal_lhood(c::Component) =
     marginal_lhood(c.prior, c.suffstats)
+
+marginal_lhood(prior, suffstats) = exp(marginal_log_lhood(prior, suffstats))
 
 function marginal_lhood(prior::NormalInverseChisq{Float64}, suffstats::NormalStats)
     μ0, σ20, κ0, ν0 = params(prior)
@@ -101,16 +103,13 @@ function marginal_lhood(prior::NormalInverseChisq{Float64}, suffstats::NormalSta
         π^(n*0.5)
 end
 
-marginal_lhood(prior::NormalInverseWishart, suffstats::MvNormalStats) =
-    exp(marginal_log_lhood(prior, suffstats))
-
 """
     marginal_log_lhood(c::Component)
 
 The marginal likelihood of data fit so far by `o`, which is the integral of the
 likelihood given the mean and variance under the prior on those parameters.
 """
-marginal_log_lhood(c::Component{NormalInverseChisq{Float64}, NormalStats}) =
+marginal_log_lhood(c::Component) =
     marginal_log_lhood(c.prior, c.suffstats)
 
 function marginal_log_lhood(prior::NormalInverseChisq{Float64}, suffstats::NormalStats)
