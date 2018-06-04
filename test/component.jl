@@ -1,6 +1,6 @@
 using ConjugatePriors, Distributions
 using Distributions: NormalStats, MvNormalStats
-using Particles: add, sub
+using Particles: add, sub, empty_suffstats
 
 @testset "Component" begin
     @testset "add/sub from NormalStats" begin
@@ -24,4 +24,14 @@ using Particles: add, sub
             MvNormalStats(zeros(2), zeros(2), zeros(2,2), 0)
     end
 
+    @test "empty sufficient statistics" begin
+        @test empty_suffstats(NormalInverseChisq()) == NormalStats(0, 0, 0, 0)
+        ss1 = empty_suffstats(NormalInverseWishart(zeros(1), 1., eye(1), 1.))
+        ss2 = MvNormalStats(zeros(1), zeros(1), zeros(1,1), 0.)
+        @test all(getfield(ss1, n) == getfield(ss2, n) for n in fieldnames(ss1))
+        ss1 = empty_suffstats(NormalInverseWishart(zeros(3), 1., eye(3), 1.))
+        ss2 = MvNormalStats(zeros(3), zeros(3), zeros(3,3), 0.)
+        @test all(getfield(ss1, n) == getfield(ss2, n) for n in fieldnames(ss1))
+    end
+    
 end

@@ -3,7 +3,8 @@ struct Component{P,S}
     suffstats::S
 end
 
-Component(prior::NormalInverseChisq) = Component(prior, NormalStats(0,0,0,0))
+Component(prior::Distribution) = Component(prior, empty_suffstats(prior))
+
 Component(params::NTuple{N,<:Real}) where N = Component(NormalInverseChisq(params...))
 
 Base.show(io::IO, c::Component{P,S}) where {P,S} = print(io, "$P$(params(c)) w/ n=$(nobs(c))")
@@ -25,6 +26,11 @@ Distributions.pdf(c::Component, x) = logpdf(posterior_predictive(c), x)
 
 Distributions.params(c::Component) = params(posterior_canon(c.prior, c.suffstats))
 
+empty_suffstats(d::NormalInverseChisq) = NormalStats(0, 0, 0, 0)
+function empty_suffstats(d::NormalInverseWishart)
+    d = d.dim
+    MvNormalStats(zeros(d), zeros(d), zeros(d,d), 0.)
+end
 
 # struct NormalStats <: SufficientStats
 #     s::Float64    # (weighted) sum of x
