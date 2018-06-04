@@ -1,4 +1,5 @@
 using ConjugatePriors, Distributions
+using ConjugatePriors: NormalInverseChisq, NormalInverseWishart
 using Distributions: NormalStats, MvNormalStats
 using Particles: add, sub, empty_suffstats
 
@@ -24,7 +25,7 @@ using Particles: add, sub, empty_suffstats
             MvNormalStats(zeros(2), zeros(2), zeros(2,2), 0)
     end
 
-    @test "empty sufficient statistics" begin
+    @testset "empty sufficient statistics" begin
         @test empty_suffstats(NormalInverseChisq()) == NormalStats(0, 0, 0, 0)
         ss1 = empty_suffstats(NormalInverseWishart(zeros(1), 1., eye(1), 1.))
         ss2 = MvNormalStats(zeros(1), zeros(1), zeros(1,1), 0.)
