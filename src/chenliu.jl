@@ -27,7 +27,7 @@ ChenLiuParticles(n::Int, priors::Union{Tuple,<:Distribution}...; rejuv::Float64=
 ChenLiuParticles(n::Int, prior::Union{Tuple,<:Distribution}, α::Float64; rejuv::Float64=50.) =
     ChenLiuParticles([InfiniteParticle(prior, α) for _ in 1:n], n, rejuv)
 
-function propogate_chenliu(p::P, y::Float64) where P<:AbstractParticle
+function propogate_chenliu(p::P, y) where P<:AbstractParticle
     ps = collect(putatives(p, y))
     # sample next based on updated weights (which are proportional to the
     # posterior p( (z_1:n, j) | x_1:n+1 ) because they've been updated based on
@@ -53,8 +53,8 @@ function coefvar(x)
     sqrt(ss.s2 / ss.tw) / ss.m * 100
 end
 
-function fit!(ps::ChenLiuParticles, y::Float64)
-    broadcast!(propogate_chenliu, ps.particles, ps.particles, y)
+function fit!(ps::ChenLiuParticles, y)
+    map!(p->propogate_chenliu(p, y), ps.particles, ps.particles)
     # rejuvinate if necessary
     ws = weight.(ps.particles)
     cv = coefvar(ws)

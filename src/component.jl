@@ -65,7 +65,7 @@ function add(ss::MvNormalStats, x::AbstractVector)
     Δ = x - ss.m
     m = ss.m + Δ/tw
     s2 = tw>1 ? ss.s2 + Δ*(x.-m)' : zeros(size(ss.s2))
-    return MvNormalStats(ss.s+x, m, s2, tw)
+    return MvNormalStats(ss.s+x, m, Hermitian(s2), tw)
 end
 
 function sub(ss::MvNormalStats, x::AbstractVector)
