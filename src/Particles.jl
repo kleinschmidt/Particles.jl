@@ -49,6 +49,7 @@ macro debug(msg)
 end
 
 include("component.jl")
+include("statepriors.jl")
 include("particle.jl")
 include("filters.jl")
 include("fearnhead.jl")
