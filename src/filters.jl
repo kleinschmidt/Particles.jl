@@ -1,4 +1,5 @@
 using ProgressMeter
+using Distances
 
 abstract type ParticleFilter end
 
@@ -28,3 +29,8 @@ end
 
 ncomponents_dist(p::ParticleFilter) =
     fit(Categorical, ncomponents.(p.particles), weight.(p.particles))
+
+function assignment_similarity(ps::ParticleFilter)
+    as = assignments(ps)
+    1 .- pairwise(Hamming(), as') ./ size(as, 2)
+end

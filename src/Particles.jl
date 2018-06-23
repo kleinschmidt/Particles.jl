@@ -31,6 +31,7 @@ export
     nobs,
     particles,
     assignments,
+    assignment_similarity,
     posterior_predictive,
     marginal_lhood,
     marginal_log_lhood,
