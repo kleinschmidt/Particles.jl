@@ -2,7 +2,7 @@ using ProgressMeter
 
 abstract type ParticleFilter end
 
-function filter!(ps::ParticleFilter, ys::AbstractVector{Float64}, progress=true)
+function Base.filter!(ps::ParticleFilter, ys::AbstractVector{T} where T, progress=true)
     @showprogress (progress ? 1 : Inf) "Fitting particles..." for y in ys
         fit!(ps, y)
     end
