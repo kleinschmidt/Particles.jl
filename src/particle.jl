@@ -61,13 +61,13 @@ Distributions.ncomponents(p::Particle) = length(p.components)
 An InfiniteParticle holds a potentially infinite number of components,
 potentially expanding every time it generates putatives.
 """
-mutable struct InfiniteParticle{P,S} <: AbstractParticle
+mutable struct InfiniteParticle{P,S,T} <: AbstractParticle
     components::Vector{Component{P,S}}
     ancestor::Union{Void,InfiniteParticle}
     assignment::Int
     weight::Float64
     prior::Component{P,S}
-    α::Float64                  # prior count for new cluster
+    stateprior::T
 end
 
 function Base.show(io::IO, p::InfiniteParticle)
@@ -86,13 +86,13 @@ Base.showcompact(io::IO, p::InfiniteParticle) =
     print(io, "$(length(p.components))+ Particle")
 
 InfiniteParticle(prior::Component, α::Float64) =
-    InfiniteParticle(typeof(prior)[], nothing, 0, 1.0, prior, α)
+    InfiniteParticle(typeof(prior)[], nothing, 0, 1.0, prior, ChineseRestaurantProcess(α))
 InfiniteParticle(prior, α::Float64) = InfiniteParticle(Component(prior), α)
 
 weight(p::InfiniteParticle, w::Float64) =
-    InfiniteParticle(p.components, p.ancestor, p.assignment, w, p.prior, p.α)
+    InfiniteParticle(p.components, p.ancestor, p.assignment, w, p.prior, p.stateprior)
 
-putatives(p::InfiniteParticle, y) = (fit(p, y, j) for j in 1:length(p.components)+1)
+putatives(p::InfiniteParticle, y) = (fit(p, y, j) for j in candidates(p.stateprior))
 
 """
     fit(p::InfiniteParticle, y::Real, x::Int)
@@ -133,19 +133,17 @@ function fit(p::InfiniteParticle, y, x::Int)
     if x ≤ length(components)
         # likelihood adjustment for old observations
         Δlogweight -= marginal_log_lhood(components[x])
-        # prior ∝ N_i
-        Δlogweight += log(nobs(components[x]))
     else
         push!(components, Component(p.prior))
-        # prior ∝ α
-        Δlogweight += log(p.α)
     end
+    Δlogweight += log_prior(p.stateprior, x)
     components[x] = add(components[x], y)
+    stateprior = add(p.stateprior, x)
     # likelihood of new observation
     Δlogweight += marginal_log_lhood(components[x])
     weight = exp(log(p.weight) + Δlogweight)
 
-    return InfiniteParticle(components, p, x, weight, p.prior, p.α)
+    return InfiniteParticle(components, p, x, weight, p.prior, stateprior)
 end
 
 
@@ -154,7 +152,12 @@ Distributions.components(p::InfiniteParticle) = [p.components..., p.prior]
 Distributions.ncomponents(p::InfiniteParticle, includeprior::Bool=false) = length(p.components) + includeprior
 
 weights(p::Particle) = ones(length(p.components)) ./ length(p.components)
-weights(p::InfiniteParticle) = (w = [Float64.(nobs.(p.components))..., p.α]; w ./= sum(w); w)
+function weights(p::InfiniteParticle)
+    w = map(exp ∘ log_prior, candidates(p.stateprior))
+    w ./= sum(w)
+    return w
+end
+    
 
 """
     posterior_predictive(p::P) where P<:AbstractParticle
@@ -177,17 +180,8 @@ The (unnormalized) posterior probability of the parameters in `p` given the data
 marginal_posterior(p::AbstractParticle) = exp(marginal_log_posterior(p))
 
 marginal_log_posterior(p::Particle) = sum(marginal_log_lhood(c) for c in components(p))
-marginal_log_posterior(p::InfiniteParticle) = marginal_log_posterior(p.components, log(p.α))
-
-function marginal_log_posterior(cs::AbstractVector{Component{P,S}}, logα::Float64) where {P,S}
-    # prior is prod_i(α × (n_i-1)!) for each component i (since the prior is α
-    # for the first obs in a new cluster and n_i thereafter.
-    log_prior =
-        length(cs) * logα +
-        sum(lgamma(nobs(c)) for c in cs)
-    log_lhood = sum(marginal_log_lhood(c) for c in cs)
-    return log_prior + log_lhood
-end
+marginal_log_posterior(p::InfiniteParticle) =
+    sum(marginal_log_lhood(c) for c in components(p)) + marginal_log_prior(p.stateprior)
 
 # TODO: normalize clusters (sort based on mean, and re-write assignments, or
 # provide a view...
