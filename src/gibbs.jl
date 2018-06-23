@@ -1,3 +1,5 @@
+# TODO: use StatePrior here, too.
+
 # a gibbs sampler to compare.
 
 # general algorithm:
