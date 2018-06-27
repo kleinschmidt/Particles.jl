@@ -9,23 +9,23 @@ using Particles: ChineseRestaurantProcess, marginal_log_prior, candidates
 
         @test candidates(crp) == 1:1
 
-        crp1 = add(crp, 1)
+        crp1, _ = add(crp, 1)
         @test crp1.N == [1.]
         @test crp1.α == crp.α
         @test candidates(crp1) == 1:2
 
         
 
-        crp11 = add(crp1, 1)
+        crp11, _ = add(crp1, 1)
         @test crp11.N == [2.]
 
-        crp111 = add(crp11, 1, 0.5)
+        crp111, _ = add(crp11, 1, 0.5)
         @test crp111.N == [2.5]
 
         @test_throws BoundsError add(crp, 2)
         @test_throws BoundsError add(crp1, 3)
 
-        crp1112 = add(crp111, 2)
+        crp1112, _ = add(crp111, 2)
         @test crp1112.N == [2.5, 1.]
         @test candidates(crp1112) == 1:3
         

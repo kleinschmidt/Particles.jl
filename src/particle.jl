@@ -127,8 +127,12 @@ incorporating ``y``: ``\frac{p(y_{x_i=x}, y_{n+1})}{p(y_{x_i=x})}``.
 
 """
 function fit(p::InfiniteParticle, y, x::Int)
+    # first calculate log-prior
+    Δlogweight = log_prior(p.stateprior, x)
+    # then update sufficient stats and convert x to an index
+    stateprior, x = add(p.stateprior, x)
     @argcheck 0 < x ≤ length(p.components)+1
-    Δlogweight = 0
+
     components = copy(p.components)
     if x ≤ length(components)
         # likelihood adjustment for old observations
@@ -136,9 +140,7 @@ function fit(p::InfiniteParticle, y, x::Int)
     else
         push!(components, Component(p.prior))
     end
-    Δlogweight += log_prior(p.stateprior, x)
     components[x] = add(components[x], y)
-    stateprior = add(p.stateprior, x)
     # likelihood of new observation
     Δlogweight += marginal_log_lhood(components[x])
     weight = exp(log(p.weight) + Δlogweight)
