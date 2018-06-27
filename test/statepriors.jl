@@ -49,5 +49,16 @@ using Particles: ChineseRestaurantProcess, marginal_log_prior, candidates
                 log_prior.(scrp_sim, candidates(scrp_sim))[2:end]
 
         end
+
+        crp = StickyCRP(0.5, 0.9)
+        crp1, s1 = add(crp, 1, 0.5)
+        crp0, s0 = add(crp, 0, 0.5)
+
+        # state is same after `add` with sticky or not
+        @test s1 == s0
+        @test crp1.N == [0.5]
+        # ... but counts are not.
+        @test crp0.N == [0.]
+
     end
 end
