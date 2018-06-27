@@ -3,6 +3,6 @@ ArgCheck
 StatsBase
 StatsFuns
 Distributions
-ConjugatePriors 0.2.1
+ConjugatePriors 0.2.3
 ProgressMeter
 Distances
