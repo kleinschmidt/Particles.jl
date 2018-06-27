@@ -11,6 +11,23 @@ the update).
 """
 function add(::StatePrior, state, n) end
 
+function Base.rand(p::StatePrior)
+    cands = candidates(p)
+    log_weights = log_prior.(p, cands)
+    log_weights .-= maximum(log_weights)
+    weights = Weights(exp.(log_weights))
+    sample(cands, weights)
+end
+
+function simulate(p::StatePrior, n::Int)
+    states = Int[]
+    for _ in 1:n
+        p, x = add(p, rand(p))
+        push!(states, x)
+    end
+    p, states
+end
+
 struct ChineseRestaurantProcess <: StatePrior
     α::Float64
     N::Vector{Float64}
