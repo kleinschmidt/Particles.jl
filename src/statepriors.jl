@@ -65,7 +65,7 @@ struct StickyCRP <: StatePrior
     Nsame::Vector{Float64}      # number of transitions to same state (sticky or not)
 end    
 
-StickyCRP(α::Float64, κ::Float64) = StickyCRP(α, κ, 0, Vector{Float64}(), Vector{Float64}())
+StickyCRP(α::Float64, κ::Float64) = StickyCRP(α, κ, 1, Vector{Float64}(), Vector{Float64}())
 
 candidates(crp::StickyCRP) = 0:length(crp.N)+1
 add(crp::StickyCRP, x::Int, n::Float64=1.0) = add(crp::StickyCRP, x==0 ? crp.last : x, x==0, n)
