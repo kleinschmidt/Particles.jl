@@ -1,4 +1,4 @@
-using Particles: ChineseRestaurantProcess, marginal_log_prior, candidates
+using Particles: marginal_log_prior, log_prior, candidates, simulate, add
 
 @testset "Priors on states" begin
     @testset "Chinese restaurant process" begin
