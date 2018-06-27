@@ -24,6 +24,8 @@ export
     NormalInverseChisq,
     GibbsCRP,
     GibbsCRPSamples,
+    ChineseRestaurantProcess,
+    StickyCRP,
     fit,
     fit!,
     putatives,
