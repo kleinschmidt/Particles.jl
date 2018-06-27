@@ -30,4 +30,24 @@ using Particles: ChineseRestaurantProcess, marginal_log_prior, candidates
         @test candidates(crp1112) == 1:3
         
     end
+
+    @testset "Sticky CRP" begin
+
+        @testset "StickyCRP with ρ=0 == CRP" begin
+            scrp = StickyCRP(0.5, 0.0)
+            crp = ChineseRestaurantProcess(0.5)
+
+            srand(1)
+            scrp_sim, scrp_states = simulate(scrp, 100)
+            srand(1)
+            crp_sim, crp_states = simulate(crp, 100)
+
+            @test scrp_states == crp_states
+            @test scrp_sim.N == crp_sim.N
+
+            @test log_prior.(crp_sim, candidates(crp_sim)) ==
+                log_prior.(scrp_sim, candidates(scrp_sim))[2:end]
+
+        end
+    end
 end
