@@ -43,7 +43,7 @@ Particle(priors::D...) where D<:Distribution =
     Particle([Component.(priors)...], nothing, 0, 1.0)
 Particle(params::NTuple{4,<:Real}...) = Particle([Component.(params)...], nothing, 0, 1.0)
 
-function fit(p::Particle, y::Float64, x::Int)
+function fit(p::Particle, y, x::Int)
     comps = copy(p.components)
     old_llhood = marginal_log_lhood(comps[x])
     comps[x] = add(comps[x], y)
@@ -51,7 +51,7 @@ function fit(p::Particle, y::Float64, x::Int)
     Particle(comps, p, x, p.weight * exp(new_llhood - old_llhood))
 end
 
-putatives(p::Particle, y::Float64) = (fit(p, y, x) for x in eachindex(p.components))
+putatives(p::Particle, y) = (fit(p, y, x) for x in eachindex(p.components))
 
 weight(p::Particle, w::Float64) = Particle(p.components, p.ancestor, p.assignment, w)
 
@@ -92,7 +92,7 @@ InfiniteParticle(prior, α::Float64) = InfiniteParticle(Component(prior), α)
 weight(p::InfiniteParticle, w::Float64) =
     InfiniteParticle(p.components, p.ancestor, p.assignment, w, p.prior, p.α)
 
-putatives(p::InfiniteParticle, y::Real) = (fit(p, y, j) for j in 1:length(p.components)+1)
+putatives(p::InfiniteParticle, y) = (fit(p, y, j) for j in 1:length(p.components)+1)
 
 """
     fit(p::InfiniteParticle, y::Real, x::Int)
@@ -126,7 +126,7 @@ ratio of the marginal likelihood of that component before and after
 incorporating ``y``: ``\frac{p(y_{x_i=x}, y_{n+1})}{p(y_{x_i=x})}``.
 
 """
-function fit(p::InfiniteParticle, y::Real, x::Int)
+function fit(p::InfiniteParticle, y, x::Int)
     @argcheck 0 < x ≤ length(p.components)+1
     Δlogweight = 0
     components = copy(p.components)

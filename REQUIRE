@@ -1,6 +1,8 @@
 julia 0.6
 ArgCheck
 StatsBase
+StatsFuns
 Distributions
 ConjugatePriors 0.2.1
 ProgressMeter
+Distances

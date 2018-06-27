@@ -5,4 +5,6 @@ using Base.Test
     include("component.jl")
     include("particle.jl")
     include("fearnhead.jl")
+    include("nix2.jl")
+    include("niw.jl")
 end

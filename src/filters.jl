@@ -1,8 +1,9 @@
 using ProgressMeter
+using Distances
 
 abstract type ParticleFilter end
 
-function fit!(ps::ParticleFilter, ys::AbstractVector{Float64}, progress=true)
+function Base.filter!(ps::ParticleFilter, ys::AbstractVector{T} where T, progress=true)
     @showprogress (progress ? 1 : Inf) "Fitting particles..." for y in ys
         fit!(ps, y)
     end
@@ -28,3 +29,8 @@ end
 
 ncomponents_dist(p::ParticleFilter) =
     fit(Categorical, ncomponents.(p.particles), weight.(p.particles))
+
+function assignment_similarity(ps::ParticleFilter)
+    as = assignments(ps)
+    1 .- pairwise(Hamming(), as') ./ size(as, 2)
+end
