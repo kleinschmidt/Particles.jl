@@ -86,8 +86,10 @@ Base.showcompact(io::IO, p::InfiniteParticle) =
     print(io, "$(length(p.components))+ Particle")
 
 InfiniteParticle(prior::Component, α::Float64) =
-    InfiniteParticle(typeof(prior)[], nothing, 0, 1.0, prior, ChineseRestaurantProcess(α))
-InfiniteParticle(prior, α::Float64) = InfiniteParticle(Component(prior), α)
+    InfiniteParticle(prior, ChineseRestaurantProcess(α))
+InfiniteParticle(prior::Component, stateprior::T) where T<:StatePrior =
+    InfiniteParticle(typeof(prior)[], nothing, 0, 1.0, prior, stateprior)
+InfiniteParticle(prior, stateprior) = InfiniteParticle(Component(prior), stateprior)
 
 weight(p::InfiniteParticle, w::Float64) =
     InfiniteParticle(p.components, p.ancestor, p.assignment, w, p.prior, p.stateprior)
