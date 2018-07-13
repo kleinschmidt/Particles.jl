@@ -124,3 +124,48 @@ function log_prior(crp::StickyCRP, x::Int)
                             "0..$(length(crp.N)+1)"))
     end
 end
+
+
+################################################################################
+# a changepoint state prior
+
+"""
+    struct ChangePoint <: StatePrior
+
+A changepoint prior.
+
+# Fields
+
+* logp::Float64 - log-probability of a change
+* k::Int - number of states.
+* n::Int - number of data points seen so far.
+"""
+struct ChangePoint <: Particles.StatePrior
+    logp::Float64
+    k::Int
+    n::Int
+end
+
+function ChangePoint(p::Float64)
+    0 ≤ p ≤ 1 || throw(ArgumentError("ChangePoint probability p must be between 0 and 1 (got p=$p)"))
+    ChangePoint(log(p), 0, 0)
+end
+
+function add(cp::ChangePoint, state, n=1.)
+    state == cp.k || state == cp.k+1 ||
+        throw(ArgumentError("ChangePoint state must be same as last ($(cp.k)) or last+1, got $state"))
+    ChangePoint(cp.logp, cp.k + (state>cp.k), cp.n+1), state
+end
+
+candidates(cp::ChangePoint) =
+    max(cp.k,1):cp.k+1
+
+# prior is 1 for starting transition (k=0).  then p for a change, 1-p for stay
+log_prior(cp::ChangePoint, state::Int) =
+    cp.k == 0 ? 0. :
+    state == cp.k ? StatsFuns.log1mexp(cp.logp) : cp.logp
+
+# marginal prior is 1 if there's just one data point.  if > 1, there are k-1
+# changepoints, and n-1 opportunities for a changepoint.
+marginal_log_prior(cp::ChangePoint) =
+    cp.n == 1 ? 0. : cp.logp*(cp.k-1) + StatsFuns.log1mexp(cp.logp)*(cp.n-cp.k)
