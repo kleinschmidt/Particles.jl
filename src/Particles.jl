@@ -26,6 +26,7 @@ export
     GibbsCRPSamples,
     ChineseRestaurantProcess,
     StickyCRP,
+    ChangePoint,
     fit,
     fit!,
     putatives,
