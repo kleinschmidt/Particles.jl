@@ -20,7 +20,7 @@ end
 
 function Base.rand(p::StatePrior)
     weights = Weights(exp.(log_prior(p)))
-    sample(cands, weights)
+    sample(candidates(p), weights)
 end
 
 function simulate(p::StatePrior, n::Int)
