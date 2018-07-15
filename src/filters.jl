@@ -13,10 +13,11 @@ end
 
 particles(p::ParticleFilter) = p.particles
 
+Base.mean(f::Function, p::ParticleFilter) = mean(f.(particles(p)), Weights(weight.(particles(p))))
+
+state_entropy(p::ParticleFilter) = mean(state_entropy, p)
+
 normalize!(x) = (x ./= sum(x))
-
-state_entropy(p::ParticleFilter) = mean(entropy.(particles(p)), Weights(weight.(particles(p))))
-
 posterior_predictive(p::ParticleFilter) =
     MixtureModel(posterior_predictive.(particles(p)), normalize!(weight.(particles(p))))
 
