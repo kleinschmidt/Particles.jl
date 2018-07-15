@@ -41,7 +41,8 @@ export
     marginal_posterior,
     marginal_log_posterior,
     ncomponents_dist,
-    sample!
+    sample!,
+    state_entropy
 #     normalize_clusters!,
 
 

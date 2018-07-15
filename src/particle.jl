@@ -158,6 +158,7 @@ Distributions.ncomponents(p::InfiniteParticle, includeprior::Bool=false) = lengt
 weights(p::Particle) = ones(length(p.components)) ./ length(p.components)
 weights(p::InfiniteParticle) = exp.(log_prior(p.stateprior))
 
+state_entropy(p::InfiniteParticle) = entropy(p.stateprior)
 
 """
     posterior_predictive(p::P) where P<:AbstractParticle

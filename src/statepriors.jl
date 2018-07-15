@@ -23,6 +23,8 @@ function Base.rand(p::StatePrior)
     sample(candidates(p), weights)
 end
 
+StatsBase.entropy(p::StatePrior) = entropy(exp.(log_prior(p)))
+
 function simulate(p::StatePrior, n::Int)
     states = Int[]
     for _ in 1:n
