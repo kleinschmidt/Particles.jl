@@ -11,11 +11,15 @@ the update).
 """
 function add(::StatePrior, state, n) end
 
-function Base.rand(p::StatePrior)
+function log_prior(p::StatePrior)
     cands = candidates(p)
     log_weights = log_prior.(p, cands)
-    log_weights .-= maximum(log_weights)
-    weights = Weights(exp.(log_weights))
+    log_weights .-= StatsFuns.logsumexp(log_weights)
+    return log_weights
+end
+
+function Base.rand(p::StatePrior)
+    weights = Weights(exp.(log_prior(p)))
     sample(cands, weights)
 end
 

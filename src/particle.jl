@@ -156,12 +156,8 @@ Distributions.components(p::InfiniteParticle) = [p.components..., p.prior]
 Distributions.ncomponents(p::InfiniteParticle, includeprior::Bool=false) = length(p.components) + includeprior
 
 weights(p::Particle) = ones(length(p.components)) ./ length(p.components)
-function weights(p::InfiniteParticle)
-    w = map(exp ∘ log_prior, candidates(p.stateprior))
-    w ./= sum(w)
-    return w
-end
-    
+weights(p::InfiniteParticle) = exp.(log_prior(p.stateprior))
+
 
 """
     posterior_predictive(p::P) where P<:AbstractParticle
