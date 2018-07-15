@@ -31,8 +31,8 @@ ConjugatePriors.NormalInverseWishart(nix2::NormalInverseChisq) =
         xvecs = [x[:,i] for i in 1:size(x,2)]
         logpdfs = [sum(logpdf.(MvNormal(prior_samp...), xvecs))
                    for prior_samp
-                   in (rand(prior) for _ in 1:100_000)]
-        @test isapprox(marginal_log_lhood(prior, ss), log(mean(exp.(logpdfs))), rtol=0.001)
+                   in (rand(prior) for _ in 1:1000)]
+        @test isapprox(marginal_log_lhood(prior, ss), log(mean(exp.(logpdfs))), rtol=0.1)
         # sanity check: lhood under samples from prior is more variable than
         # error from analytical expression
         @test std(logpdfs) > abs(marginal_log_lhood(prior, ss) - log(mean(exp.(logpdfs))))

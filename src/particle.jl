@@ -19,7 +19,7 @@ end
 # a particle for parametric clustering
 struct Particle{P,S} <: AbstractParticle
     components::Vector{Component{P,S}}
-    ancestor::Union{Void,Particle}
+    ancestor::Union{Nothing,Particle}
     assignment::Int
     weight::Float64
 end
@@ -63,7 +63,7 @@ potentially expanding every time it generates putatives.
 """
 mutable struct InfiniteParticle{P,S,T} <: AbstractParticle
     components::Vector{Component{P,S}}
-    ancestor::Union{Void,InfiniteParticle}
+    ancestor::Union{Nothing,InfiniteParticle}
     assignment::Int
     weight::Float64
     prior::Component{P,S}
@@ -166,7 +166,6 @@ Get the posterior predictive distribution for a particle, which is a mixture of
 the posterior predictives for each component (including the prior, for an
 `InfiniteParticle`).
 """
-
 posterior_predictive(p::P) where P<:AbstractParticle =
     MixtureModel(posterior_predictive.(components(p)), weights(p))
 
@@ -176,7 +175,6 @@ posterior_predictive(p::P) where P<:AbstractParticle =
 The (unnormalized) posterior probability of the parameters in `p` given the data
 `fit!` by it thus far.
 """
-
 marginal_posterior(p::AbstractParticle) = exp(marginal_log_posterior(p))
 
 marginal_log_posterior(p::Particle) = sum(marginal_log_lhood(c) for c in components(p))

@@ -1,5 +1,6 @@
 using Particles
-using Base.Test
+using Test
+using Random
 
 @testset "Particles" begin
     include("component.jl")
