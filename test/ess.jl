@@ -39,7 +39,7 @@ function ess(f::Function; n::Int=100)
     ms = SharedArray{Float64}(n)
     m2s = SharedArray{Float64}(n)
     @sync @parallel for i in 1:n
-        srand(i)
+        Random.seed!(i)
         ms[i], m2s[i] = f()
     end
     return mean(m2s) / var(ms)

@@ -37,9 +37,9 @@ using Particles: marginal_log_prior, log_prior, candidates, simulate, add
             scrp = StickyCRP(0.5, 0.0)
             crp = ChineseRestaurantProcess(0.5)
 
-            srand(1)
+            Random.seed!(1)
             scrp_sim, scrp_states = simulate(scrp, 100)
-            srand(1)
+            Random.seed!(1)
             crp_sim, crp_states = simulate(crp, 100)
 
             @test scrp_states == crp_states

@@ -17,13 +17,13 @@ ConjugatePriors.NormalInverseWishart(nix2::NormalInverseChisq) =
         pp_samps = rand(posterior_predictive(d), 1_000_000)
 
         isapprox(cov(d_pp_samps'), cov(pp_samps'), atol=0.01)
-        isapprox(mean(d_pp_samps, 2), mean(pp_samps, 2), atol=0.01)
+        isapprox(mean(d_pp_samps, dims=2), mean(pp_samps, dims=2), atol=0.01)
     end
 
     @testset "Marginal likelihood" begin
-        srand(1001)
+        Random.seed!(1001)
 
-        prior = NormalInverseWishart([0., 1.], 10., eye(2), 50.)
+        prior = NormalInverseWishart([0., 1.], 10., Matrix(1.0I, 2,2), 50.)
         x = rand(MvNormal(rand(prior)...), 10)
         ss = suffstats(MvNormal, x)
         # this is trivially true at the moment since one just calls the other
@@ -56,7 +56,7 @@ ConjugatePriors.NormalInverseWishart(nix2::NormalInverseChisq) =
         @test all(post_nix2.μ .≈ post_niw.mu)
         @test post_nix2.κ ≈ post_niw.kappa
         @test post_nix2.ν ≈ post_niw.nu
-        @test all(post_nix2.σ2 .≈ full(post_niw.Lamchol)[1] ./ post_niw.nu)
+        @test all(post_nix2.σ2 .≈ Matrix(post_niw.Lamchol)[1] ./ post_niw.nu)
 
         μ, σ2 = rand(post_nix2)
         @test logpdf(post_nix2, μ, σ2) ≈ logpdf(post_niw, [μ], reshape([σ2], 1, 1))

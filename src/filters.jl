@@ -13,7 +13,7 @@ end
 
 particles(p::ParticleFilter) = p.particles
 
-Base.mean(f::Function, p::ParticleFilter) = mean(f.(particles(p)), Weights(weight.(particles(p))))
+Statistics.mean(f::Function, p::ParticleFilter) = mean(f.(particles(p)), Weights(weight.(particles(p))))
 
 state_entropy(p::ParticleFilter) = mean(state_entropy, p)
 
