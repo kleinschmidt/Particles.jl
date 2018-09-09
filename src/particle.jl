@@ -134,7 +134,7 @@ function fit(p::InfiniteParticle, y, x::Int)
         # likelihood adjustment for old observations
         Δlogweight -= marginal_log_lhood(components[x])
     else
-        push!(components, Component(p.prior))
+        push!(components, p.prior)
     end
     components[x] = add(components[x], y)
     # likelihood of new observation
