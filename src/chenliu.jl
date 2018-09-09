@@ -17,7 +17,7 @@ function Base.show(io::IO, ps::ChenLiuParticles)
     else
         println("Particle filter with $n particles:")
     end
-    showcompact(io, ps.particles)
+    show(IOContext(io, :compact=>true), ps.particles)
 end
 
 # initialize with full population of empty particles, because this method

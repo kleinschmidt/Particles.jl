@@ -26,7 +26,7 @@ end
 
 function Base.show(io::IO, p::Particle{P,S}) where {P,S}
     if get(io, :compact, false)
-        showcompact(io, p)
+        print(io, "$(length(p.components))-Particle")
     else
         println(io, "Particle with $(length(p.components)) components:")
         for c in p.components
@@ -34,8 +34,6 @@ function Base.show(io::IO, p::Particle{P,S}) where {P,S}
         end
     end
 end
-
-Base.showcompact(io::IO, p::Particle) = print(io, "$(length(p.components))-Particle")
 
 Particle(priors::AbstractVector{D}) where D<:Distribution = 
     Particle(Component.(priors), nothing, 0, 1.0)
@@ -72,7 +70,7 @@ end
 
 function Base.show(io::IO, p::InfiniteParticle)
     if get(io, :compact, false)
-        showcompact(io, p)
+        print(io, "$(length(p.components))+ Particle")
     else
         println("Particle with $(length(p.components))+ components:")
         for c in p.components
@@ -81,9 +79,6 @@ function Base.show(io::IO, p::InfiniteParticle)
         println(io, "  (prior: $(p.prior))")
     end
 end
-
-Base.showcompact(io::IO, p::InfiniteParticle) =
-    print(io, "$(length(p.components))+ Particle")
 
 InfiniteParticle(prior::Component, α::Float64) =
     InfiniteParticle(prior, ChineseRestaurantProcess(α))
