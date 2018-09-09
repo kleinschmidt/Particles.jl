@@ -45,8 +45,8 @@ using Particles: marginal_log_prior, log_prior, candidates, simulate, add
             @test scrp_states == crp_states
             @test scrp_sim.N == crp_sim.N
 
-            @test log_prior.(crp_sim, candidates(crp_sim)) ==
-                log_prior.(scrp_sim, candidates(scrp_sim))[2:end]
+            @test log_prior.(Ref(crp_sim), candidates(crp_sim)) ==
+                log_prior.(Ref(scrp_sim), candidates(scrp_sim))[2:end]
 
         end
 

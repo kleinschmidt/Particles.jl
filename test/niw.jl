@@ -16,8 +16,8 @@ ConjugatePriors.NormalInverseWishart(nix2::NormalInverseChisq) =
         end
         pp_samps = rand(posterior_predictive(d), 1_000_000)
 
-        isapprox(cov(d_pp_samps'), cov(pp_samps'), atol=0.01)
-        isapprox(mean(d_pp_samps, dims=2), mean(pp_samps, dims=2), atol=0.01)
+        @test isapprox(cov(d_pp_samps'), cov(pp_samps'), atol=0.01)
+        @test isapprox(mean(d_pp_samps, dims=2), mean(pp_samps, dims=2), atol=0.01)
     end
 
     @testset "Marginal likelihood" begin
@@ -29,7 +29,7 @@ ConjugatePriors.NormalInverseWishart(nix2::NormalInverseChisq) =
         # this is trivially true at the moment since one just calls the other
         @test marginal_log_lhood(prior, ss) ≈ log(marginal_lhood(prior, ss))
         xvecs = [x[:,i] for i in 1:size(x,2)]
-        logpdfs = [sum(logpdf.(MvNormal(prior_samp...), xvecs))
+        logpdfs = [sum(logpdf.(Ref(MvNormal(prior_samp...)), xvecs))
                    for prior_samp
                    in (rand(prior) for _ in 1:1000)]
         @test isapprox(marginal_log_lhood(prior, ss), log(mean(exp.(logpdfs))), rtol=0.1)

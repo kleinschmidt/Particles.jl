@@ -13,7 +13,7 @@ function add(::StatePrior, state, n) end
 
 function log_prior(p::StatePrior)
     cands = candidates(p)
-    log_weights = log_prior.(p, cands)
+    log_weights = log_prior.(Ref(p), cands)
     log_weights .-= StatsFuns.logsumexp(log_weights)
     return log_weights
 end
