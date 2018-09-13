@@ -1,6 +1,12 @@
 module Particles
 
 using
+    LinearAlgebra,
+    Random,
+    SpecialFunctions,
+    Statistics
+
+using
     Distributions,
     ConjugatePriors,
     StatsBase,
@@ -13,6 +19,7 @@ using Distributions: NormalStats, MvNormalStats
 using ConjugatePriors: posterior_canon, NormalInverseChisq, NormalInverseWishart
 using StatsBase: Weights
 using StatsFuns: logmvgamma, logπ
+
 
 export
     ParticleFilter,

@@ -17,7 +17,7 @@ posterior_predictive(d::NormalInverseChisq) =
 
 function posterior_predictive(d::NormalInverseWishart)
     df = d.nu - length(d.mu) + 1
-    Λ = d.Lamchol[:U]'*d.Lamchol[:U]
+    Λ = Matrix(d.Lamchol)
     MvTDist(df, d.mu, Λ*(d.kappa+1)/(d.kappa*df))
 end
 

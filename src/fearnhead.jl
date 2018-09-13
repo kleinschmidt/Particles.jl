@@ -22,7 +22,7 @@ function Base.show(io::IO, ps::FearnheadParticles)
     else
         println("Particle filter with $n particles:")
     end
-    showcompact(io, ps.particles)
+    show(IOContext(io, :compact=>true), ps.particles)
 end
 
 # Initialize population with a single, empty particle. (avoid redundancy)

@@ -19,14 +19,14 @@ end
 # a particle for parametric clustering
 struct Particle{P,S} <: AbstractParticle
     components::Vector{Component{P,S}}
-    ancestor::Union{Void,Particle}
+    ancestor::Union{Nothing,Particle}
     assignment::Int
     weight::Float64
 end
 
 function Base.show(io::IO, p::Particle{P,S}) where {P,S}
     if get(io, :compact, false)
-        showcompact(io, p)
+        print(io, "$(length(p.components))-Particle")
     else
         println(io, "Particle with $(length(p.components)) components:")
         for c in p.components
@@ -34,8 +34,6 @@ function Base.show(io::IO, p::Particle{P,S}) where {P,S}
         end
     end
 end
-
-Base.showcompact(io::IO, p::Particle) = print(io, "$(length(p.components))-Particle")
 
 Particle(priors::AbstractVector{D}) where D<:Distribution = 
     Particle(Component.(priors), nothing, 0, 1.0)
@@ -63,7 +61,7 @@ potentially expanding every time it generates putatives.
 """
 mutable struct InfiniteParticle{P,S,T} <: AbstractParticle
     components::Vector{Component{P,S}}
-    ancestor::Union{Void,InfiniteParticle}
+    ancestor::Union{Nothing,InfiniteParticle}
     assignment::Int
     weight::Float64
     prior::Component{P,S}
@@ -72,7 +70,7 @@ end
 
 function Base.show(io::IO, p::InfiniteParticle)
     if get(io, :compact, false)
-        showcompact(io, p)
+        print(io, "$(length(p.components))+ Particle")
     else
         println("Particle with $(length(p.components))+ components:")
         for c in p.components
@@ -81,9 +79,6 @@ function Base.show(io::IO, p::InfiniteParticle)
         println(io, "  (prior: $(p.prior))")
     end
 end
-
-Base.showcompact(io::IO, p::InfiniteParticle) =
-    print(io, "$(length(p.components))+ Particle")
 
 InfiniteParticle(prior::Component, α::Float64) =
     InfiniteParticle(prior, ChineseRestaurantProcess(α))
@@ -106,18 +101,17 @@ particles which have seen the same data are not included in the weight update.
 
 The weight update term is the ratio of the previous and updated marginal
 posterior:
-\[
-\frac{p((z_{1:n}, x) | y_{1:n+1} )}{p(z_{1:n} | y_{1:n} )}
-\propto
-\frac{p(y_{1:n+1} | (z_{1:n}, x)) p((z_{1:n}, x))}{p(y_{1:n} | z_{1:n}) p(z_{1:n})}
-\]
+```math
+\\frac{p((z_{1:n}, x) | y_{1:n+1} )}{p(z_{1:n} | y_{1:n} )} ∝
+\\frac{p(y_{1:n+1} | (z_{1:n}, x)) p((z_{1:n}, x))}{p(y_{1:n} | z_{1:n}) p(z_{1:n})}
+```
 
 The prior ratio can be reduced using the conditional distribution: ``p(z_{1:n},
 x)/p(z_{1:n}) = p(x | z_{1:n})``.  Under a Chinese Restaurant Process prior, this
-is ``N_x / \sum_j N_j + \alpha`` if ``x`` corresponds to an existing component and
-``\alpha / \sum_j N_j + \alpha`` if it's new.  Because the total count ``\sum_j
+is ``N_x / ∑_j N_j + α`` if ``x`` corresponds to an existing component and
+``α / ∑_j N_j + α`` if it's new.  Because the total count ``∑_j
 N_j`` is the same across particles, the net change is proportional to ``N_x`` or
-``\alpha``.
+``α``.
 
 The likelihood ratio also depends on whether ``y`` is being assigned to a new
 component or not.  If it is being assigned to a new component, then its marginal
@@ -125,7 +119,7 @@ likelihood is independent of all other points and the entire adjustment is
 proportional to the marginal likelihood of ``y`` under the prior.  When ``x``
 corresponds to an existing component, the adjustment is proportional to the
 ratio of the marginal likelihood of that component before and after
-incorporating ``y``: ``\frac{p(y_{x_i=x}, y_{n+1})}{p(y_{x_i=x})}``.
+incorporating ``y``: ``\\frac{p(y_{x_i=x}, y_{n+1})}{p(y_{x_i=x})}``.
 
 """
 function fit(p::InfiniteParticle, y, x::Int)
@@ -140,7 +134,7 @@ function fit(p::InfiniteParticle, y, x::Int)
         # likelihood adjustment for old observations
         Δlogweight -= marginal_log_lhood(components[x])
     else
-        push!(components, Component(p.prior))
+        push!(components, p.prior)
     end
     components[x] = add(components[x], y)
     # likelihood of new observation
@@ -167,7 +161,6 @@ Get the posterior predictive distribution for a particle, which is a mixture of
 the posterior predictives for each component (including the prior, for an
 `InfiniteParticle`).
 """
-
 posterior_predictive(p::P) where P<:AbstractParticle =
     MixtureModel(posterior_predictive.(components(p)), weights(p))
 
@@ -177,7 +170,6 @@ posterior_predictive(p::P) where P<:AbstractParticle =
 The (unnormalized) posterior probability of the parameters in `p` given the data
 `fit!` by it thus far.
 """
-
 marginal_posterior(p::AbstractParticle) = exp(marginal_log_posterior(p))
 
 marginal_log_posterior(p::Particle) = sum(marginal_log_lhood(c) for c in components(p))

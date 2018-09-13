@@ -3,8 +3,8 @@ language: julia
 os:
   - linux
 julia:
-  - release
   - 0.7
+  - 1.0
   - nightly
 notifications:
   email: false
@@ -16,8 +16,6 @@ git:
 matrix:
   allow_failures:
     - julia: nightly
-      os: linux
-    - julia: 0.7
       os: linux
 
 ## uncomment and modify the following lines to manually install system packages
@@ -32,7 +30,5 @@ matrix:
 #script:
 #  - julia -e 'Pkg.clone(pwd()); Pkg.build("Particles"); Pkg.test("Particles"; coverage=true)'
 after_success:
-  # push coverage results to Coveralls
-  - julia -e 'cd(Pkg.dir("Particles")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
-  # push coverage results to Codecov
-  - julia -e 'cd(Pkg.dir("Particles")); Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
+  - julia -e 'using Pkg; Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
+  - julia -e 'using Pkg; Pkg.add("Coverage"); using Coverage; Coveralls.submit(process_folder())'

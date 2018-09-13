@@ -1,5 +1,7 @@
 using Particles
-using Base.Test
+using Test
+using Random
+using LinearAlgebra
 
 @testset "Particles" begin
     include("component.jl")
