@@ -13,9 +13,9 @@ end
 function Base.show(io::IO, ps::ChenLiuParticles)
     n = length(ps.particles)
     if n < ps.N
-        println("Particle filter with $n (up to $(ps.N)) particles:")
+        println(io, "Particle filter with $n (up to $(ps.N)) particles:")
     else
-        println("Particle filter with $n particles:")
+        println(io, "Particle filter with $n particles:")
     end
     show(IOContext(io, :compact=>true), ps.particles)
 end
