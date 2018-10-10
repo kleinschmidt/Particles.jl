@@ -1,9 +1,11 @@
 # not run during tests, but reproduce teh effective sample size simulations from
 # Fearnhead (2004).
-addprocs(11)
+using Distributed
+addprocs()
 
 @everywhere begin
-    using ParallelDataTransfer, Particles, Distributions, StatsBase
+    using ParallelDataTransfer, SharedArrays
+    using Particles, Distributions, StatsBase, Random
     using Particles: ncomponents
     using Distributions: MixtureModel
     using ConjugatePriors: NormalInverseGamma, NormalInverseChisq
@@ -30,7 +32,8 @@ addprocs(11)
     n_samp = 5000
     n_dat = 200
     α = 0.5
-    prior = NormalInverseChisq(NormalInverseGamma(0., 25., 1., 1.))
+    prior = convert(NormalInverseChisq, NormalInverseGamma(0., 25., 1., 1.))
+    stateprior = ChineseRestaurantProcess(α)
 
 end
 
@@ -38,22 +41,23 @@ function ess(f::Function; n::Int=100)
     sendto(workers(), f=f)
     ms = SharedArray{Float64}(n)
     m2s = SharedArray{Float64}(n)
-    @sync @parallel for i in 1:n
+    @sync @distributed for i in 1:n
         Random.seed!(i)
         ms[i], m2s[i] = f()
     end
     return mean(m2s) / var(ms)
 end
 
+n_ess = 100
 results = []
 for σ in [0.5, 2.5]
     for μ in [0.5, 1, 2, 5]
         mm = MixtureModel([Normal(0, 0.5), Normal(μ, 0.5), Normal(2μ, σ)],
                           [1/2, 1/6, 1/3])
         x = rand(mm, n_dat)
-        fc = ess(() -> m_m2(fit!(FearnheadParticles(n_samp, prior, α), x, false)))
-        cl = ess(() -> m_m2(fit!(ChenLiuParticles(n_samp, prior, α, 50.), x, false)))
-        gs = ess(() -> m_m2(GibbsCRP(prior, α, x), n_samp, burnin=500))
+        fc = ess(() -> m_m2(filter!(FearnheadParticles(n_samp, prior, stateprior), x, false)), n=n_ess)
+        cl = ess(() -> m_m2(filter!(ChenLiuParticles(n_samp, prior, stateprior, rejuv=50.), x, false)), n=n_ess)
+        gs = ess(() -> m_m2(GibbsCRP(prior, α, x), n_samp, burnin=500), n=n_ess)
         @show μ, σ, fc, cl, gs
         push!(results, (μ, σ, fc, cl, gs))
     end
