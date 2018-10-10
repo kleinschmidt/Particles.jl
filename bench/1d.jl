@@ -14,3 +14,17 @@ end
 
 f(y)
 @btime(f($y))
+
+@profiler f(y)
+
+function g(y)
+    ps = FearnheadParticles(100,
+                            NormalInverseChisq(0., 1., 0.1, 1.0),
+                            ChineseRestaurantProcess(1.))
+    filter!(ps, y, false)
+end
+
+g(y)
+@btime(g($y))
+
+@profiler g(y)
