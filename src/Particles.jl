@@ -10,7 +10,6 @@ using
     Distributions,
     ConjugatePriors,
     StatsBase,
-    ArgCheck,
     StatsFuns
 
 import StatsBase: fit!, fit

@@ -127,7 +127,8 @@ function fit(p::InfiniteParticle, y, x::Int)
     Δlogweight = log_prior(p.stateprior, x)
     # then update sufficient stats and convert x to an index
     stateprior, x = add(p.stateprior, x)
-    @argcheck 0 < x ≤ length(p.components)+1
+    0 < x ≤ length(p.components)+1 ||
+        throw(ArgumentError("can't fit component $x: must be between 0 and $(length(p.components)+1)"))
 
     components = copy(p.components)
     if x ≤ length(components)

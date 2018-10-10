@@ -83,7 +83,8 @@ function StatsBase.sample!(gc::GibbsCRP, i::Int)
 end
 
 function StatsBase.sample!(gc::GibbsCRP)
-    @argcheck !isempty(gc.data) "can't sample from Gibbs sampler with empty .data field"
+    isempty(gc.data) &&
+        throw(ArgumentError("can't sample from Gibbs sampler with empty .data field"))
     for i in 1:length(gc.data)
         sample!(gc, i)
     end
