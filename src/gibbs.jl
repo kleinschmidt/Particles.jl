@@ -71,8 +71,7 @@ function StatsBase.sample!(gc::GibbsCRP, i::Int)
 
     # clean up empties
     if new_k == gc.empties[1]
-        shift!(gc.empties)
-        gc.empties
+        popfirst!(gc.empties)
         if isempty(gc.empties)
             push!(gc.components, Component(gc.prior))
             push!(gc.empties, length(gc.components))
