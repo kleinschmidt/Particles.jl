@@ -40,6 +40,7 @@ Find the cutoff for weights to automatically propogate.  Returns
 * `tot0` the total weight (for normalization)
 """
 function cutoff(ws::Vector{<:Real}, N::Int)
+    # TODO: do this in place (see Fearnhead and Clifford 2003, Appendix C)
     tot0 = sum(ws)
     tot = tot0
     for i in eachindex(ws)
@@ -48,6 +49,42 @@ function cutoff(ws::Vector{<:Real}, N::Int)
         end
         tot -= ws[i]
     end
+end
+
+"""
+    sample_stratified(x::AbstractVector, n::Int, w::AbstractVector)
+
+Stratified sampling algorithm from Carpenter et al. (1999), as described in
+Fearnhead and Clifford (2003).  Draws a sample from `x` with weights `w`,
+without replacement.
+
+NOTE!! This algorithm is only guaranteed to give at most `n` samples, and not
+necessarily exactly `n`, especially when `n` is close to `length(x)`.  This
+isn't a problem in practice because this used to sample from the "leftover"
+putative particles, and the worst case is when there's no particles carried over
+in which case we'll take at most 50% of the putatives (much less when there are
+more than two components per particle).
+
+Returns the number or elements resampled (≤ n)
+
+"""
+function sample_stratified!(x::AbstractVector, n::Int, w)
+    K = sum(w) / n
+    U = rand() * K
+
+    i_store = 0
+    for i in eachindex(x,w)
+        U = U-w[i]
+        if U < 0
+            i_store += 1
+            x[i_store] = x[i]
+            U += K
+        end
+    end
+
+    @assert i_store ≤ n
+    i_store < n && @debug "  sample_stratified! ask for $(n) but got $(i_store)"
+    return i_store
 end
 
 """
@@ -71,31 +108,34 @@ function fit!(ps::FearnheadParticles{P}, y::Float64) where P
         @debug "  M=$M: Fewer than N=$(ps.N) particles"
         ps.particles = putative
     else
+        # TODO: consider doing this all in place, see Fearnhead and Cliffor
+        # 2003, Appendix C.  basic idea is to use an algorithm like
+        # median-finding (quickselect) to find the cutoff weight and partition
+        # the putative particles into kept and re-sampled (in place), and then
+        # re-sample the rest in place as well.  then you just trim the vector of
+        # putatives to the right length and good to go.
+
         @debug "  M=$M: More than N=$(ps.N): Resampling"
         # resample down to N particles
         sort!(putative, alg=QuickSort, by=weight, rev=true)
         ws = weight.(putative)
         ci, c, totalw = cutoff(ws, ps.N)
         @debug "  keeping $(ci-1) out of $M (cutoff=$c)"
-        ps.particles = typeof(ps.particles)(ps.N)
+        
+        # resample from ci:end
+        n_resamp = ps.N - (ci-1)
+        n_resamp = sample_stratified!(view(putative, ci:lastindex(putative)),
+                                      n_resamp,
+                                      view(ws, ci:lastindex(ws)))
 
-        # propagate particles 1:ci-1
-        # ps.particles[1:ci-1] .= putative[1:ci-1]
-        for i in 1:ci-1
-            ps.particles[i] = weight(putative[i], weight(putative[i])/totalw)
+        resize!(putative, n_resamp+ci-1)
+
+        for i in eachindex(putative)
+            new_w = (i < ci ? weight(putative[i]) : c) / total_w
+            putative[i] = weight(putative[i], new_w)
         end
 
-        # resample the rest:
-        wsample!(view(putative, ci:M),        # from putative particles ci:M...
-                 view(ws, ci:M),              # weighted according to old weights...
-                 view(ps.particles, ci:ps.N), # draw ps.N-ci+1 particles and store
-                                              # in ps.particles...
-                 replace=false)               # without replacement
-        # set weights
-        c /= totalw
-        for i in ci:ps.N
-            ps.particles[i] = weight(ps.particles[i], c)
-        end
+        ps.particles = putative
         @debug "  total weight: $(sum(weight(p) for p in ps.particles))"
     end
     ps
