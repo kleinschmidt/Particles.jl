@@ -33,13 +33,14 @@ function propogate_chenliu(p::P, y) where P<:AbstractParticle
     # posterior p( (z_1:n, j) | x_1:n+1 ) because they've been updated based on
     # the same ancestor, multiplying by
     # p( (z_1:n,j) | x_1:n+1) / p(z_1:n | x_1:n) ∝ p( (z_1:n,j) | x_1:n+1 )
-    next = wsample(ps, weight.(ps))
+    weights = weight.(ps)
+    next = instantiate(wsample(ps, weights))
     # now to update the weight.  we need it to be
     # w_n+1 = w_n × sum( p(z_1:n,j | x_1:n+1) / p(z_1:n | x_1:n) )
     # call the putative weight of particle j v_j.
     # v_j = w_n × p((z_1:n,j) | x_1:n+1) / p(z_1:n | x_1:n), so we just need to
     # add those up
-    return weight(next, sum(weight(pp) for pp in ps))
+    return weight(next, sum(weights))
 end
 
 """
