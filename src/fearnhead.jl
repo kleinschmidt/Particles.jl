@@ -53,7 +53,7 @@ function cutoff(ws::Vector{<:Real}, N::Int)
 end
 
 """
-    sample_stratified(x::AbstractVector, n::Int, w::AbstractVector)
+    sample_stratified!(x::AbstractVector, n::Int, w::AbstractVector)
 
 Stratified sampling algorithm from Carpenter et al. (1999), as described in
 Fearnhead and Clifford (2003).  Draws a sample from `x` with weights `w`,
@@ -87,6 +87,14 @@ function sample_stratified!(x::AbstractVector, n::Int, w)
     i_store < n && @debug "  sample_stratified! ask for $(n) but got $(i_store)"
     return i_store
 end
+
+function sample_stratified(x::AbstractVector, n, w)
+    x_samp = copy(x)
+    n_samp = sample_stratified!(x_samp, n, w)
+    resize!(x_samp, n_samp)
+    return x_samp
+end
+
 
 """
     fit!(ps::FearnheadParticles, y::Float64)

@@ -73,7 +73,7 @@
         x = collect(1:100)
         
         for n in [1, 8, 64, 90, 99]
-            for _ in 1:1000
+            for _ in 1:100
                 x_samp = Particles.sample_stratified(x, n, w)
                 @test length(x_samp) ≤ n
             end
