@@ -1,10 +1,15 @@
-using BenchmarkTools
-using Particles, Distributions, ConjugatePriors
+using BenchmarkTools, 
+    Particles, 
+    Distributions, 
+    ConjugatePriors,
+    StaticArrays, 
+    Compat,
+    Random
+
 using ConjugatePriors: NormalInverseWishart
-using StaticArrays
-using Compat
 using Compat.LinearAlgebra
 
+Random.seed!(100)
 
 truth = MixtureModel([MvNormal(-2 .* ones(2), Matrix(1.0I,2,2)),
                       MvNormal(2 .* ones(2), Matrix(1.0I,2,2))])
