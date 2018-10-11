@@ -1,12 +1,12 @@
-struct PutativeParticle{P,O,S}
+struct PutativeParticle{P,O,S,C}
     ancestor::P
     obs::O
     state::S
+    updated_comp::C
     weight::Float64
 end
 
-instantiate(p::PutativeParticle{P}) where P =
-    update(p.ancestor, p.obs, p.state, p.weight)
+instantiate(p::PutativeParticle{P}) where P = error("Don't know how to instantiate a putative $P")
 
 weight(p::PutativeParticle) = p.weight
 
@@ -114,29 +114,30 @@ function PutativeParticle(p::InfiniteParticle, obs::O, state::S) where {O,S}
         # likelihood adjustment for old observations
         comp = p.components[comp_i]
         logweight -= marginal_log_lhood(comp)
-        logweight += marginal_log_lhood(add(comp, obs))
     else
         comp = p.prior
-        logweight += marginal_log_lhood(add(comp, obs))
     end
+    updated_comp = add(comp, obs)
+    logweight += marginal_log_lhood(add(comp, obs))
     
-    return PutativeParticle(p, obs, state, exp(logweight))
+    return PutativeParticle(p, obs, state, updated_comp, exp(logweight))
     
 end
 
-function update(p::InfiniteParticle, obs, state, weight)
-    stateprior, comp_i = add(p.stateprior, state)
+function instantiate(putative::PutativeParticle{<:InfiniteParticle})
+    p = putative.ancestor
+    stateprior, comp_i = add(p.stateprior, putative.state)
     0 < comp_i ≤ length(p.components)+1 ||
         throw(ArgumentError("can't fit component $comp_i: must be between 0 and $(length(p.components)+1)"))
 
     components = copy(p.components)
     if comp_i > length(components)
-        push!(components, p.prior)
+        push!(components, putative.updated_comp)
+    else
+        components[comp_i] = putative.updated_comp
     end
-    components[comp_i] = add(components[comp_i], obs)
-    # likelihood of new observation
 
-    return InfiniteParticle(components, p, comp_i, weight, p.prior, stateprior)
+    return InfiniteParticle(components, p, comp_i, putative.weight, p.prior, stateprior)
 end
 
 """
