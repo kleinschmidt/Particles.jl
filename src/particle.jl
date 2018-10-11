@@ -1,3 +1,16 @@
+struct PutativeParticle{P,O,S}
+    ancestor::P
+    obs::O
+    state::S
+    weight::Float64
+end
+
+instantiate(p::PutativeParticle{P}) where P =
+    update(p.ancestor, p.obs, p.state, p.weight)
+
+weight(p::PutativeParticle) = p.weight
+
+
 abstract type AbstractParticle end
 
 weight(p::AbstractParticle) = p.weight
@@ -89,7 +102,42 @@ InfiniteParticle(prior, stateprior) = InfiniteParticle(Component(prior), statepr
 weight(p::InfiniteParticle, w::Float64) =
     InfiniteParticle(p.components, p.ancestor, p.assignment, w, p.prior, p.stateprior)
 
-putatives(p::InfiniteParticle, y) = (fit(p, y, j) for j in candidates(p.stateprior))
+putatives(p::InfiniteParticle, y) = (PutativeParticle(p, y, j) for j in candidates(p.stateprior))
+
+# lazily compute the weight without actually updating the suff stats etc, which
+# requries expensive copying
+function PutativeParticle(p::InfiniteParticle, obs::O, state::S) where {O,S}
+    logweight = log(p.weight)
+    logweight += log_prior(p.stateprior, state)
+    comp_i = state_to_index(p.stateprior, state)
+    if comp_i ≤ length(p.components)
+        # likelihood adjustment for old observations
+        comp = p.components[comp_i]
+        logweight -= marginal_log_lhood(comp)
+        logweight += marginal_log_lhood(add(comp, obs))
+    else
+        comp = p.prior
+        logweight += marginal_log_lhood(add(comp, obs))
+    end
+    
+    return PutativeParticle(p, obs, state, exp(logweight))
+    
+end
+
+function update(p::InfiniteParticle, obs, state, weight)
+    stateprior, comp_i = add(p.stateprior, state)
+    0 < comp_i ≤ length(p.components)+1 ||
+        throw(ArgumentError("can't fit component $comp_i: must be between 0 and $(length(p.components)+1)"))
+
+    components = copy(p.components)
+    if comp_i > length(components)
+        push!(components, p.prior)
+    end
+    components[comp_i] = add(components[comp_i], obs)
+    # likelihood of new observation
+
+    return InfiniteParticle(components, p, comp_i, weight, p.prior, stateprior)
+end
 
 """
     fit(p::InfiniteParticle, y::Real, x::Int)
