@@ -11,6 +11,14 @@ the update).
 """
 function add(::StatePrior, state, n) end
 
+"""
+    state_to_index(::StatePrior, state)
+
+Convert a state to the index of the corresponding mixture component.  Defaults
+to the identity mapping.
+"""
+state_to_index(::StatePrior, state) = state
+
 function log_prior(p::StatePrior)
     cands = candidates(p)
     log_weights = log_prior.(Ref(p), cands)
@@ -90,8 +98,10 @@ end
 
 StickyCRP(α::Float64, κ::Float64) = StickyCRP(α, κ, 1, Vector{Float64}(), Vector{Float64}())
 
+state_to_index(crp::StickyCRP, state::Int) = x == 0 ? crp.last : x
+
 candidates(crp::StickyCRP) = 0:length(crp.N)+1
-add(crp::StickyCRP, x::Int, n::Float64=1.0) = add(crp::StickyCRP, x==0 ? crp.last : x, x==0, n)
+add(crp::StickyCRP, x::Int, n::Float64=1.0) = add(crp::StickyCRP, state_to_index(crp, x), x==0, n)
 function add(crp::StickyCRP, x::Int, sticky::Bool, n::Float64)
     N = copy(crp.N)
     Nsame = copy(crp.Nsame)
