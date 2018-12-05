@@ -6,7 +6,8 @@ struct PutativeParticle{P,O,S,C}
     weight::Float64
 end
 
-instantiate(p::PutativeParticle{P}) where P = error("Don't know how to instantiate a putative $P")
+instantiate(p::PutativeParticle{P}) where P =
+    error("Don't know how to instantiate a putative $P")
 
 weight(p::PutativeParticle) = p.weight
 
@@ -102,7 +103,8 @@ InfiniteParticle(prior, stateprior) = InfiniteParticle(Component(prior), statepr
 weight(p::InfiniteParticle, w::Float64) =
     InfiniteParticle(p.components, p.ancestor, p.assignment, w, p.prior, p.stateprior)
 
-putatives(p::InfiniteParticle, y) = (PutativeParticle(p, y, j) for j in candidates(p.stateprior))
+putatives(p::InfiniteParticle, y) =
+    (PutativeParticle(p, y, j) for j in candidates(p.stateprior))
 
 # lazily compute the weight without actually updating the suff stats etc, which
 # requries expensive copying
@@ -128,7 +130,8 @@ function instantiate(putative::PutativeParticle{<:InfiniteParticle})
     p = putative.ancestor
     stateprior, comp_i = add(p.stateprior, putative.state)
     0 < comp_i ≤ length(p.components)+1 ||
-        throw(ArgumentError("can't fit component $comp_i: must be between 0 and $(length(p.components)+1)"))
+        throw(ArgumentError("can't fit component $comp_i: must be between 0 and " *
+                            "$(length(p.components)+1)"))
 
     components = copy(p.components)
     if comp_i > length(components)
@@ -177,7 +180,8 @@ function fit(p::InfiniteParticle, y, x::Int)
     # then update sufficient stats and convert x to an index
     stateprior, x = add(p.stateprior, x)
     0 < x ≤ length(p.components)+1 ||
-        throw(ArgumentError("can't fit component $x: must be between 0 and $(length(p.components)+1)"))
+        throw(ArgumentError("can't fit component $x: must be between 0 and " *
+                            "$(length(p.components)+1)"))
 
     components = copy(p.components)
     if x ≤ length(components)
