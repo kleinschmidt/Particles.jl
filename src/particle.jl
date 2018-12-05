@@ -113,6 +113,19 @@ function PutativeParticle(p::InfiniteParticle, obs::O, state::S) where {O,S}
     
 end
 
+"""
+    instantiate(p::PutativeParticle)
+
+Do all the bookkeeping necessary to convert a `PutativeParticle` into a real one:
+
+* update the state prior
+* update the vector of components
+
+Both of these require copying vectors (of counts for most of the state priors, 
+and of components) to make minor updates, and are only necessary if a particle 
+is accepted, hence separating the creation of the putative particle and 
+instantiating/accepting it.
+"""
 function instantiate(putative::PutativeParticle{<:InfiniteParticle})
     p = putative.ancestor
     stateprior, comp_i = add(p.stateprior, putative.state)
