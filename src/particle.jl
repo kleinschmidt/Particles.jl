@@ -29,46 +29,6 @@ function assignments(p::AbstractParticle)
     reverse!(asgns)
 end
 
-
-# a particle for parametric clustering
-struct Particle{P,S} <: AbstractParticle
-    components::Vector{Component{P,S}}
-    ancestor::Union{Nothing,Particle}
-    assignment::Int
-    weight::Float64
-end
-
-function Base.show(io::IO, p::Particle{P,S}) where {P,S}
-    if get(io, :compact, false)
-        print(io, "$(length(p.components))-Particle")
-    else
-        println(io, "Particle with $(length(p.components)) components:")
-        for c in p.components
-            println(io, "  $c")
-        end
-    end
-end
-
-Particle(priors::AbstractVector{D}) where D<:Distribution = 
-    Particle(Component.(priors), nothing, 0, 1.0)
-Particle(priors::D...) where D<:Distribution =
-    Particle([Component.(priors)...], nothing, 0, 1.0)
-Particle(params::NTuple{4,<:Real}...) = Particle([Component.(params)...], nothing, 0, 1.0)
-
-function fit(p::Particle, y, x::Int)
-    comps = copy(p.components)
-    old_llhood = marginal_log_lhood(comps[x])
-    comps[x] = add(comps[x], y)
-    new_llhood = marginal_log_lhood(comps[x])
-    Particle(comps, p, x, p.weight * exp(new_llhood - old_llhood))
-end
-
-putatives(p::Particle, y) = (fit(p, y, x) for x in eachindex(p.components))
-
-weight(p::Particle, w::Float64) = Particle(p.components, p.ancestor, p.assignment, w)
-
-Distributions.ncomponents(p::Particle) = length(p.components)
-
 """
 An InfiniteParticle holds a potentially infinite number of components,
 potentially expanding every time it generates putatives.
@@ -204,7 +164,6 @@ Distributions.components(p::InfiniteParticle) = [p.components..., p.prior]
 Distributions.ncomponents(p::InfiniteParticle, includeprior::Bool=false) =
     length(p.components) + includeprior
 
-weights(p::Particle) = ones(length(p.components)) ./ length(p.components)
 weights(p::InfiniteParticle) = exp.(log_prior(p.stateprior))
 
 state_entropy(p::InfiniteParticle) = entropy(p.stateprior)
@@ -220,14 +179,13 @@ posterior_predictive(p::P) where P<:AbstractParticle =
     MixtureModel(posterior_predictive.(components(p)), weights(p))
 
 """
-    marginal_posterior(p::Particle)
+    marginal_posterior(p::AbstractParticle)
 
 The (unnormalized) posterior probability of the parameters in `p` given the data
 `fit!` by it thus far.
 """
 marginal_posterior(p::AbstractParticle) = exp(marginal_log_posterior(p))
 
-marginal_log_posterior(p::Particle) = sum(marginal_log_lhood(c) for c in components(p))
 marginal_log_posterior(p::InfiniteParticle) =
     sum(marginal_log_lhood(c) for c in components(p)) + marginal_log_prior(p.stateprior)
 

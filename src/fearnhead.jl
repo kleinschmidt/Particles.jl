@@ -26,7 +26,6 @@ function Base.show(io::IO, ps::FearnheadParticles)
 end
 
 # Initialize population with a single, empty particle. (avoid redundancy)
-FearnheadParticles(n::Int, priors...) = FearnheadParticles([Particle(priors...)], n)
 FearnheadParticles(n::Int, prior::Union{Tuple,<:Distribution}, stateprior::T) where T<:StatePrior =
     FearnheadParticles([InfiniteParticle(prior, stateprior)], n)
 

@@ -24,7 +24,6 @@ export
     ParticleFilter,
     FearnheadParticles,
     ChenLiuParticles,
-    Particle,
     InfiniteParticle,
     Component,
     NormalInverseChisq,
