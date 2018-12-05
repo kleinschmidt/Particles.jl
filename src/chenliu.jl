@@ -50,8 +50,8 @@ Calculat the coefficient of variation for x: σ / μ * 100
 """
 function coefvar(x)
     # use NormalStats to calculate both mean and var in one pass
-    ss = suffstats(Normal, x)
-    sqrt(ss.s2 / ss.tw) / ss.m * 100
+    μ, σ = StatsBase.mean_and_std(x)
+    σ / μ * 100
 end
 
 function fit!(ps::ChenLiuParticles, y)
