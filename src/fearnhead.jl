@@ -102,7 +102,7 @@ end
 Filter a single observation with the population of particles in `ps`.
 
 """
-function fit!(ps::FearnheadParticles{P}, y::Float64) where P
+function fit!(ps::FearnheadParticles{P}, y) where P
     # generate putative particles
     putative = collect(Iterators.flatten(putatives(p, y) for p in ps.particles))
     total_w = sum(weight(p) for p in putative)
