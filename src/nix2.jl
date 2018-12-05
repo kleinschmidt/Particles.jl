@@ -41,7 +41,7 @@ OnlineStats.nobs(o::FitNormalInverseChisq) = nobs(o.var)
 Base.convert(::Type{NormalStats}, o::Variance) =
     NormalStats(o.nobs*o.μ, o.μ, o.nobs*o.σ2, Float64(o.nobs))
 fit!(o::FitNormalInverseChisq, x, w::Float64) = (fit!(o.var, x, w); o)
-fit!(o::FitNormalInverseChisq, x) = fit!(o, x, 1./(nobs(o.var)+1))
+fit!(o::FitNormalInverseChisq, x) = fit!(o, x, 1.0/(nobs(o.var)+1))
 NormalInverseChisq(o::FitNormalInverseChisq) = posterior_canon(o.prior, NormalStats(o.var))
 function OnlineStatsBase._value(o::FitNormalInverseChisq)
     post =
