@@ -197,7 +197,8 @@ end
 
 
 Distributions.components(p::InfiniteParticle) = [p.components..., p.prior]
-Distributions.ncomponents(p::InfiniteParticle, includeprior::Bool=false) = length(p.components) + includeprior
+Distributions.ncomponents(p::InfiniteParticle, includeprior::Bool=false) =
+    length(p.components) + includeprior
 
 weights(p::Particle) = ones(length(p.components)) ./ length(p.components)
 weights(p::InfiniteParticle) = exp.(log_prior(p.stateprior))
