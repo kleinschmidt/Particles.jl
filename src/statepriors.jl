@@ -185,3 +185,34 @@ log_prior(cp::ChangePoint, state::Int) =
 # changepoints, and n-1 opportunities for a changepoint.
 marginal_log_prior(cp::ChangePoint) =
     cp.n == 1 ? 0. : cp.logp*(cp.k-1) + StatsFuns.log1mexp(cp.logp)*(cp.n-cp.k)
+
+
+"""
+    struct NStatePrior <: StatePrior
+
+A state prior with a fixed, finite number of states.
+
+# Fields
+* `counts::Vector{Float64}`
+* `total_count::Float64`
+* `n::Int` number of states
+"""
+struct NStatePrior <: StatePrior
+    counts::Vector{Float64}
+    total_count::Float64
+    n::Int
+end
+
+NStatePrior(counts::Vector{<:Real}) = NStatePrior(counts, sum(counts), length(counts))
+
+function add(ns::NStatePrior, state, n=1.)
+    state ∈ 1:ns.n || throw(ArgumentError("Invalid state for NStatePrior: $state " *
+                                          "(valid states are 1:$(ns.n))"))
+    counts = copy(ns.counts)
+    counts[state] += n
+    NStatePrior(counts, ns.total_count + n, ns.n), state
+end
+
+candidates(ns::NStatePrior) = 1:ns.n
+log_prior(ns::NStatePrior, state) = log(ns.counts[state]) - log(ns.total_count)
+marginal_log_prior(ns::NStatePrior) = 0.

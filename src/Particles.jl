@@ -33,6 +33,7 @@ export
     ChineseRestaurantProcess,
     StickyCRP,
     ChangePoint,
+    NStatePrior,
     fit,
     fit!,
     putatives,
