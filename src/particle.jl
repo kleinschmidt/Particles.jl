@@ -66,8 +66,35 @@ weight(p::InfiniteParticle, w::Float64) =
 putatives(p::InfiniteParticle, y) =
     (PutativeParticle(p, y, j) for j in candidates(p.stateprior))
 
-# lazily compute the weight without actually updating the suff stats etc, which
-# requries expensive copying
+"""
+    PutativeParticle(p::InfiniteParticle, y, x)
+
+Lazily compute the consequences of adding observation `y` to cluster `x` of
+particle `p` weight without actually updating the suff stats etc, which requires
+(potentially expensive) copying
+   
+The weight update term is the ratio of the previous and updated marginal
+posterior:
+```math
+\\frac{p((z_{1:n}, x) | y_{1:n+1} )}{p(z_{1:n} | y_{1:n} )} ∝
+\\frac{p(y_{1:n+1} | (z_{1:n}, x)) p((z_{1:n}, x))}{p(y_{1:n} | z_{1:n}) p(z_{1:n})}
+```
+
+The prior ratio can be reduced using the conditional distribution: ``p(z_{1:n},
+x)/p(z_{1:n}) = p(x | z_{1:n})``.  Under a Chinese Restaurant Process prior, this
+is ``N_x / ∑_j N_j + α`` if ``x`` corresponds to an existing component and
+``α / ∑_j N_j + α`` if it's new.  Because the total count ``∑_j
+N_j`` is the same across particles, the net change is proportional to ``N_x`` or
+``α``.
+
+The likelihood ratio also depends on whether ``y`` is being assigned to a new
+component or not.  If it is being assigned to a new component, then its marginal
+likelihood is independent of all other points and the entire adjustment is
+proportional to the marginal likelihood of ``y`` under the prior.  When ``x``
+corresponds to an existing component, the adjustment is proportional to the
+ratio of the marginal likelihood of that component before and after
+incorporating ``y``: ``\\frac{p(y_{x_i=x}, y_{n+1})}{p(y_{x_i=x})}``.
+"""
 function PutativeParticle(p::InfiniteParticle, obs::O, state::S) where {O,S}
     logweight = log(p.weight)
     logweight += log_prior(p.stateprior, state)
@@ -103,62 +130,7 @@ function instantiate(putative::PutativeParticle{<:InfiniteParticle})
     return InfiniteParticle(components, p, comp_i, putative.weight, p.prior, stateprior)
 end
 
-"""
-    fit(p::InfiniteParticle, y::Real, x::Int)
-
-Update `p`, classifying `y` under cluster `x`.  `x` can be an existing cluster
-or a new one.  The corresponding component is updated, the classification
-recorded, and the weight is updated.  Terms that are constant across all other
-particles which have seen the same data are not included in the weight update.
-
-The weight update term is the ratio of the previous and updated marginal
-posterior:
-```math
-\\frac{p((z_{1:n}, x) | y_{1:n+1} )}{p(z_{1:n} | y_{1:n} )} ∝
-\\frac{p(y_{1:n+1} | (z_{1:n}, x)) p((z_{1:n}, x))}{p(y_{1:n} | z_{1:n}) p(z_{1:n})}
-```
-
-The prior ratio can be reduced using the conditional distribution: ``p(z_{1:n},
-x)/p(z_{1:n}) = p(x | z_{1:n})``.  Under a Chinese Restaurant Process prior, this
-is ``N_x / ∑_j N_j + α`` if ``x`` corresponds to an existing component and
-``α / ∑_j N_j + α`` if it's new.  Because the total count ``∑_j
-N_j`` is the same across particles, the net change is proportional to ``N_x`` or
-``α``.
-
-The likelihood ratio also depends on whether ``y`` is being assigned to a new
-component or not.  If it is being assigned to a new component, then its marginal
-likelihood is independent of all other points and the entire adjustment is
-proportional to the marginal likelihood of ``y`` under the prior.  When ``x``
-corresponds to an existing component, the adjustment is proportional to the
-ratio of the marginal likelihood of that component before and after
-incorporating ``y``: ``\\frac{p(y_{x_i=x}, y_{n+1})}{p(y_{x_i=x})}``.
-
-"""
-function fit(p::InfiniteParticle, y, x::Int)
-    # first calculate log-prior
-    Δlogweight = log_prior(p.stateprior, x)
-    # then update sufficient stats and convert x to an index
-    stateprior, x = add(p.stateprior, x)
-    0 < x ≤ length(p.components)+1 ||
-        throw(ArgumentError("can't fit component $x: must be between 0 and " *
-                            "$(length(p.components)+1)"))
-
-    components = copy(p.components)
-    if x ≤ length(components)
-        # likelihood adjustment for old observations
-        Δlogweight -= marginal_log_lhood(components[x])
-    else
-        push!(components, p.prior)
-    end
-    components[x] = add(components[x], y)
-    # likelihood of new observation
-    Δlogweight += marginal_log_lhood(components[x])
-    weight = exp(log(p.weight) + Δlogweight)
-
-    return InfiniteParticle(components, p, x, weight, p.prior, stateprior)
-end
-
-
+fit(p::InfiniteParticle, y, x) = instantiate(PutativeParticle(p, y, x))
 
 Distributions.components(p::InfiniteParticle) = [p.components..., p.prior]
 Distributions.ncomponents(p::InfiniteParticle, includeprior::Bool=false) =
