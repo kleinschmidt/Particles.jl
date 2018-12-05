@@ -102,20 +102,15 @@ end
 Filter a single observation with the population of particles in `ps`.
 
 """
-function fit!(ps::FearnheadParticles{P}, y::Float64) where P
+function fit!(ps::FearnheadParticles{P}, y) where P
     # generate putative particles
-    putative = P[]
-    for p in ps.particles
-        for pp in putatives(p,y)
-            push!(putative, pp)
-        end
-    end
+    putative = collect(Iterators.flatten(putatives(p, y) for p in ps.particles))
     total_w = sum(weight(p) for p in putative)
 
     M = length(putative)
     if M <= ps.N
         @debug "  M=$M: Fewer than N=$(ps.N) particles"
-        ps.particles = putative
+        ps.particles = instantiate.(putative)
     else
         # TODO: consider doing this all in place, see Fearnhead and Cliffor
         # 2003, Appendix C.  basic idea is to use an algorithm like
@@ -137,17 +132,15 @@ function fit!(ps::FearnheadParticles{P}, y::Float64) where P
                                       n_resamp,
                                       view(ws, ci:lastindex(ws)))
 
-        resize!(putative, n_resamp+ci-1)
+        resize!(ps.particles, n_resamp+ci-1)
 
-        for i in eachindex(putative)
+        for i in eachindex(ps.particles)
             new_w = (i < ci ? weight(putative[i]) : c) / total_w
-            putative[i] = weight(putative[i], new_w)
+            ps.particles[i] = weight(instantiate(putative[i]), new_w)
         end
-
-        ps.particles = putative
         @debug "  total weight: $(sum(weight(p) for p in ps.particles))"
     end
-    ps
+    return ps
 end
 
 function normalize_clusters!(ps::FearnheadParticles, method::Symbol)

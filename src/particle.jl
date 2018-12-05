@@ -1,3 +1,16 @@
+struct PutativeParticle{P,O,S,C}
+    ancestor::P
+    obs::O
+    state::S
+    updated_comp::C
+    weight::Float64
+end
+
+instantiate(p::PutativeParticle{P}) where P = error("Don't know how to instantiate a putative $P")
+
+weight(p::PutativeParticle) = p.weight
+
+
 abstract type AbstractParticle end
 
 weight(p::AbstractParticle) = p.weight
@@ -89,7 +102,43 @@ InfiniteParticle(prior, stateprior) = InfiniteParticle(Component(prior), statepr
 weight(p::InfiniteParticle, w::Float64) =
     InfiniteParticle(p.components, p.ancestor, p.assignment, w, p.prior, p.stateprior)
 
-putatives(p::InfiniteParticle, y) = (fit(p, y, j) for j in candidates(p.stateprior))
+putatives(p::InfiniteParticle, y) = (PutativeParticle(p, y, j) for j in candidates(p.stateprior))
+
+# lazily compute the weight without actually updating the suff stats etc, which
+# requries expensive copying
+function PutativeParticle(p::InfiniteParticle, obs::O, state::S) where {O,S}
+    logweight = log(p.weight)
+    logweight += log_prior(p.stateprior, state)
+    comp_i = state_to_index(p.stateprior, state)
+    if comp_i ≤ length(p.components)
+        # likelihood adjustment for old observations
+        comp = p.components[comp_i]
+        logweight -= marginal_log_lhood(comp)
+    else
+        comp = p.prior
+    end
+    updated_comp = add(comp, obs)
+    logweight += marginal_log_lhood(add(comp, obs))
+    
+    return PutativeParticle(p, obs, state, updated_comp, exp(logweight))
+    
+end
+
+function instantiate(putative::PutativeParticle{<:InfiniteParticle})
+    p = putative.ancestor
+    stateprior, comp_i = add(p.stateprior, putative.state)
+    0 < comp_i ≤ length(p.components)+1 ||
+        throw(ArgumentError("can't fit component $comp_i: must be between 0 and $(length(p.components)+1)"))
+
+    components = copy(p.components)
+    if comp_i > length(components)
+        push!(components, putative.updated_comp)
+    else
+        components[comp_i] = putative.updated_comp
+    end
+
+    return InfiniteParticle(components, p, comp_i, putative.weight, p.prior, stateprior)
+end
 
 """
     fit(p::InfiniteParticle, y::Real, x::Int)
