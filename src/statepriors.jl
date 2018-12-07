@@ -2,6 +2,8 @@
 
 abstract type StatePrior end
 
+Base.broadcastable(s::StatePrior) = Ref(s)
+
 """
     add(::StatePrior, state, n)
 
@@ -21,7 +23,7 @@ state_to_index(::StatePrior, state) = state
 
 function log_prior(p::StatePrior)
     cands = candidates(p)
-    log_weights = log_prior.(Ref(p), cands)
+    log_weights = log_prior.(p, cands)
     log_weights .-= StatsFuns.logsumexp(log_weights)
     return log_weights
 end

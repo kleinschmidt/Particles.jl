@@ -14,6 +14,8 @@ weight(p::PutativeParticle) = p.weight
 
 abstract type AbstractParticle end
 
+Base.broadcastable(p::AbstractParticle) = Ref(p)
+
 weight(p::AbstractParticle) = p.weight
 Distributions.components(p::AbstractParticle) = p.components
 
@@ -46,7 +48,7 @@ function Base.show(io::IO, p::InfiniteParticle)
     if get(io, :compact, false)
         print(io, "$(length(p.components))+ Particle")
     else
-        println("Particle with $(length(p.components))+ components:")
+        println(io, "Particle with $(length(p.components))+ components:")
         for c in p.components
             println(io, "  $c")
         end
@@ -142,6 +144,7 @@ function instantiate(putative::PutativeParticle{<:InfiniteParticle})
 
     return InfiniteParticle(components, p, comp_i, putative.weight, p.prior, stateprior)
 end
+instantiate(p::AbstractParticle) = p
 
 fit(p::InfiniteParticle, y, x) = instantiate(PutativeParticle(p, y, x))
 
