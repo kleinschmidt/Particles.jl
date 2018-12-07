@@ -28,3 +28,22 @@ to cross when we come to it.  One possibility is to return a similarity matrix
 sort of thing, which is the probability that any pair of observations belongs to
 the same cluster.  _That_ can be marginalized over (and compared to the
 "correct" clustering solution).
+
+## Optimization
+
+### Putatives
+
+There's no need to keep anything other than the putatives for the old
+particles.  And in fact you might be able to represent the whole _population_
+more efficiently if you keep a vector of all the components and then just index
+into that...that might be too fiddly and not buy you too much though.
+
+I guess the question always is, what's the problem this optimization is trying
+to solve?  The run-away copying of vectors that causes some out of control
+memory use.  But that's not the major bottleneck except for the really easy 1-D
+cases.
+
+### Refactoring filters
+
+The filters should be re-factored into the filter itself and the
+propogation/resampling method.
