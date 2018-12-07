@@ -10,4 +10,5 @@ using LinearAlgebra
     include("fearnhead.jl")
     include("nix2.jl")
     include("niw.jl")
+    include("labeled.jl")
 end

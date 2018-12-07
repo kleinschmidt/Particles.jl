@@ -33,6 +33,7 @@ export
     StickyCRP,
     ChangePoint,
     NStatePrior,
+    Labeled,
     fit,
     fit!,
     putatives,
@@ -68,5 +69,6 @@ include("filters.jl")
 include("fearnhead.jl")
 include("chenliu.jl")
 include("gibbs.jl")
+include("labeled.jl")
 
 end # module
