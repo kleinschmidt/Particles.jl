@@ -46,6 +46,9 @@ export
     marginal_log_lhood,
     marginal_posterior,
     marginal_log_posterior,
+    log_prior,
+    marginal_log_prior,
+    simulate,
     ncomponents_dist,
     sample!,
     state_entropy
