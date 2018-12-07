@@ -37,8 +37,8 @@ end
         global ps_fit = [p]
         for y in ys
             ps_put = reduce(vcat, Particles.instantiate.(putatives(p, y)) for p in ps_put)
-            ps_oldfit = reduce(vcat, old_fit.(Ref(p), y, candidates(p.stateprior)) for p in ps_fit)
-            ps_fit = reduce(vcat, fit.(Ref(p), y, candidates(p.stateprior)) for p in ps_oldfit)
+            ps_oldfit = reduce(vcat, old_fit.(p, y, candidates(p.stateprior)) for p in ps_oldfit)
+            ps_fit = reduce(vcat, fit.(p, y, candidates(p.stateprior)) for p in ps_fit)
             @test components.(ps_put) == components.(ps_fit) == components.(ps_oldfit)
         end
     end
