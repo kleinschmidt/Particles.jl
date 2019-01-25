@@ -26,7 +26,7 @@ posterior_predictive(p::ParticleFilter) =
 function assignments(p::ParticleFilter)
     ps = particles(p)
     a = assignments(first(ps))
-    asgn = Matrix{eltype(a)}(length(a), length(ps))
+    asgn = Matrix{eltype(a)}(undef, length(a), length(ps))
     for (i,p) in enumerate(ps)
         asgn[:,i] .= assignments(p)
     end
