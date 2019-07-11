@@ -53,14 +53,6 @@ export
     ncomponents_dist,
     sample!,
     state_entropy
-#     normalize_clusters!,
-
-
-const DEBUG = false
-
-macro debug(msg)
-    DEBUG ? :(println(string($(esc(msg))))) : nothing
-end
 
 include("component.jl")
 include("statepriors.jl")
