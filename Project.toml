@@ -1,5 +1,6 @@
 name = "Particles"
 uuid = "2ebe8b25-25be-5fc1-b6bc-48c775df5563"
+version = "0.1.0"
 
 [deps]
 ConjugatePriors = "1624bea9-42b1-5fc1-afd3-e96f729c8d6c"
