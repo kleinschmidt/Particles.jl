@@ -40,3 +40,25 @@ function assignment_similarity(ps::ParticleFilter)
     as = assignments(ps)
     1 .- pairwise(Hamming(), as') ./ size(as, 2)
 end
+
+"""
+    randindex(ps::ParticleFilter, truth::Vector{<:Integer})
+
+Compute the Rand Index of the clusters found by the particles in `ps`, given
+ground truth cluster indices.  The Rand Index is the number of pairs of
+observations on which the two clusterings agree, divided by the total number of
+pairs.
+
+"""
+function randindex(ps::ParticleFilter, truth::Vector{<:Integer})
+    ps_sim = assignment_similarity(ps)
+    truth_sim = truth .== truth'
+
+    N = length(ps_sim)
+
+    both_same = sum(ps_sim .* truth_sim)
+    # sum((1 .- ps_sim) .* (1 .- truth_sim)) = sum(1 - truth_sim - ps_sim + truth_sim*ps_sim)
+    both_diff = N - sum(truth_sim) - sum(ps_sim) + both_same
+
+    rand_index = (both_same + both_diff) / N
+end

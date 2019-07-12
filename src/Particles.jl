@@ -52,7 +52,8 @@ export
     simulate,
     ncomponents_dist,
     sample!,
-    state_entropy
+    state_entropy,
+    randindex
 
 include("component.jl")
 include("statepriors.jl")
