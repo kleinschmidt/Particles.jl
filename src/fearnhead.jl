@@ -29,44 +29,33 @@ end
 FearnheadParticles(n::Int, prior::Union{Tuple,<:Distribution}, stateprior::T) where T<:StatePrior =
     FearnheadParticles([InfiniteParticle(prior, stateprior)], n)
 
-
 """
-    cutoff(ws::Vector{<:Real}, N::Int)
+    cutoff_ascending(ws::Vector{<:Real}, N::Int)
 
-Find the cutoff for weights to automatically propogate.  Returns
+Find the cutoff for weights to automatically propogate, assuming that ws are
+sorted in ascending order.  Returns
 
-* `i`, the index of the first weight _not_ automatically propogated
+* `i`, the index of the first weight that is kept
 * `1/c`, the **unnormalized** weight for the resampled particles
-* `tot0` the total weight (for normalization)
-"""
-function cutoff(ws::Vector{<:Real}, N::Int)
-    # TODO: do this in place (see Fearnhead and Clifford 2003, Appendix C)
-    tot0 = sum(ws)
-    tot = tot0
-    for i in eachindex(ws)
-        if tot / ws[i] + (i-1) >= N
-            return i, tot/(N-i+1), tot0
-        end
-        tot -= ws[i]
-    end
-end
 
 # Algorithm from Fearnhead and Clifford (2003):
-# 
-# want to find c s.t. sum(min(w/c, 1) for w in ws) = N.  we do this by finding
-# the minimum element of ws κ such that sum(min(w/κ, 1) for w in ws) ≤ N.
-# 
-# the intuition is that for all w > κ you get 1...so if κ < all w, then you get
-# M > N.  as you move κ up the ws, you take away some of the 1s...let B_κ be the
-# sum of all w < κ, and A_κ be the number of elements ≥ κ.  Then we need B_κ / κ
-# + A_κ ≤ N.
-#
-# once we have κ=ws[i], we're going to keep everything κ and higher (ws[i:end]).
-# which means that c ≤ κ.  so we have B_κ / c + A_κ = N => 1/c = (N-A_κ) /
-# (B_κ-κ).
-#
-# the returned index is the index of the first w that's KEPT.  the returned c is
-# the weight that's assigned to the resampled particles.
+
+We want to find `c` s.t. `sum(min(w/c, 1) for w in ws) = N`.  We do this by
+finding the minimum element of `ws` κ such that `sum(min(w/κ, 1) for w in ws) ≤
+N`.
+
+The intuition is that for all w > κ you get 1, so if κ < all w, then you get M >
+N.  as you move κ up the ws, you take away some of the 1s.  Let B_κ be the sum
+of all w < κ, and A_κ be the number of elements ≥ κ.  Then we need B_κ / κ + A_κ
+≤ N.
+
+Once we have κ=ws[i], we're going to keep everything κ and higher (ws[i:end]).
+which means that c ≤ κ.  so we have B_κ / c + A_κ = N => 1/c = (N-A_κ) /
+(B_κ-κ).
+
+The returned index is the index of the first w that's **kept**.  the returned w is
+the weight that's assigned to the resampled particles.
+"""
 function cutoff_ascending(ws::Vector{T}, N::Int) where {T<:Real}
     issorted(ws) ||
         throw(ArgumentError("weights must be sorted in ascending order"))
@@ -188,10 +177,7 @@ function fit!(ps::FearnheadParticles{P}, y) where P
         @views ps.particles[n_resamp .+ (1:n_kept)] .=
             instantiate.(putative[kept_i:end],
                          weight.(putative[kept_i:end]) ./ total_w)
-        # for i in eachindex(ps.particles)
-        #     new_w = (i < ci ? weight(putative[i]) : c) / total_w
-        #     ps.particles[i] = instantiate(putative[i], new_w)
-        # end
+
         @debug "  total weight: $(sum(weight(p) for p in ps.particles))"
     end
     return ps

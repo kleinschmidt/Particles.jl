@@ -2,9 +2,17 @@
 
     @testset "Cutoff for automatic propogation" begin
 
-        using Particles: cutoff
+        using Particles: cutoff_ascending
+
+        # a stub to replace the original cutoff using cutoff_ascending
+        function cutoff(ws, N)
+            ws = sort(ws)
+            i_keep, w = cutoff_ascending(ws, N)
+            return length(ws) - i_keep + 2, w, sum(ws)
+        end
+
         function cutoff_normalized(ws::Vector{<:Real}, N::Int)
-            ws ./= sum(ws)
+            ws = ws ./ sum(ws)
             total = sum(ws)
             for i in eachindex(ws)
                 if total / ws[i] + (i-1) >= N
@@ -15,7 +23,7 @@
         end
 
         function cutoff_while(ws::Vector{<:Real}, N::Int)
-            ws ./= sum(ws)
+            ws = ws ./ sum(ws)
             total = sum(ws)
             i = 1
             while total / ws[i] + (i-1) < N
@@ -51,13 +59,16 @@
         @test cut/tot ≈ 1/10
 
         # when weights are all equal or zero, also resample all with weight 1/N
+        # ...actually, in THIS case you effectively only HAVE N particles withn
+        # non-zero weight so you should keep them all, which is what
+        # cutoff-ascending gives you (unlike the old solution).
         ws = [i > 10 ? 0. : 1. for i in 1:20]
         keep, cut, tot = cutoff(ws, 10)
-        @test isapprox(cutoff_normalized(ws, 10)[2], cut/tot, atol=1e-10)
-        @test isapprox(cutoff_while(ws, 10)[2], cut/tot, atol=1e-10)
+        @test keep == 11
 
-        @test keep == 1
-        @test cut/tot ≈ 1/10
+        ws = [i > 10 ? 0. : rand() for i in 1:20]
+        keep, cut, tot = cutoff(ws, 10)
+        @test keep == 11
 
     end
 
