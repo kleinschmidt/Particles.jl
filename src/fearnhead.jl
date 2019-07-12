@@ -155,18 +155,24 @@ function fit!(ps::FearnheadParticles{P}, y) where P
         # re-sample the rest in place as well.  then you just trim the vector of
         # putatives to the right length and good to go.
 
-        @debug "  M=$M: More than N=$(ps.N): Resampling"
         # resample down to N particles
         sort!(putative, alg=QuickSort, by=weight)
         ws = weight.(putative)
+        # will keep kept_i:end, and resample from 1:(kept_i-1) and give weight w_resamp
         kept_i, w_resamp = cutoff_ascending(ws, ps.N)
 
         # keep kept_i:end
         n_kept = length(ws) - (kept_i - 1)
         
-        
-        # resample from ci:end
+        # resample from 1:(kept_i-1)
         n_resamp = ps.N - n_kept
+
+        @debug """
+               M=$M: More than N=$(ps.N)
+                 Keeping $n_kept ($kept_i:end)
+                 Resampling $(M-n_kept) from $n_resamp
+               """
+
         n_resamp = sample_stratified!(view(putative, 1:(kept_i-1)),
                                       n_resamp,
                                       view(ws, 1:(kept_i-1)))
