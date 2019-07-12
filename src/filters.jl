@@ -50,15 +50,31 @@ observations on which the two clusterings agree, divided by the total number of
 pairs.
 
 """
-function randindex(ps::ParticleFilter, truth::Vector{<:Integer})
+function randindex(ps::ParticleFilter, truth::Vector{<:Integer}, type=:adjusted)
     ps_sim = assignment_similarity(ps)
     truth_sim = truth .== truth'
 
-    N = length(ps_sim)
+    size(truth_sim) == size(ps_sim) ||
+        throw(DimensionMismatch("Ground truth and particles have different number of obs!"))
+
+    # number of pairs 
+    N = prod(size(ps_sim))
+
+    # adjustment needs the sum of squares of the clusters sizes, which is just
+    # the area of each assignment similarity matrix that's 1
+    nis = sum(ps_sim)
+    njs = sum(truth_sim)
 
     both_same = sum(ps_sim .* truth_sim)
     # sum((1 .- ps_sim) .* (1 .- truth_sim)) = sum(1 - truth_sim - ps_sim + truth_sim*ps_sim)
-    both_diff = N - sum(truth_sim) - sum(ps_sim) + both_same
+    both_diff = N - nis - njs + both_same
 
-    rand_index = (both_same + both_diff) / N
+    if type == :adjusted
+        n = length(truth)
+        # from Clustering.jl:
+        nc = (n*(n^2+1)-(n+1)*nis-(n+1)*njs+2*(nis*njs)/n)/(2*(n-1))
+        adj_rand_index = (both_same + both_diff - nc) / (N - nc)
+    else
+        rand_index = (both_same + both_diff) / N
+    end
 end
