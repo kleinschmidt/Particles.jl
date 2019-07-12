@@ -29,26 +29,51 @@ end
 FearnheadParticles(n::Int, prior::Union{Tuple,<:Distribution}, stateprior::T) where T<:StatePrior =
     FearnheadParticles([InfiniteParticle(prior, stateprior)], n)
 
-
 """
-    cutoff(ws::Vector{<:Real}, N::Int)
+    cutoff_ascending(ws::Vector{<:Real}, N::Int)
 
-Find the cutoff for weights to automatically propogate.  Returns
+Find the cutoff for weights to automatically propogate, assuming that ws are
+sorted in ascending order.  Returns
 
-* `i`, the index of the first weight _not_ automatically propogated
+* `i`, the index of the first weight that is kept
 * `1/c`, the **unnormalized** weight for the resampled particles
-* `tot0` the total weight (for normalization)
+
+# Algorithm from Fearnhead and Clifford (2003):
+
+We want to find `c` s.t. `sum(min(w/c, 1) for w in ws) = N`.  We do this by
+finding the minimum element of `ws` κ such that `sum(min(w/κ, 1) for w in ws) ≤
+N`.
+
+The intuition is that for all w > κ you get 1, so if κ < all w, then you get M >
+N.  as you move κ up the ws, you take away some of the 1s.  Let B_κ be the sum
+of all w < κ, and A_κ be the number of elements ≥ κ.  Then we need B_κ / κ + A_κ
+≤ N.
+
+Once we have κ=ws[i], we're going to keep everything κ and higher (ws[i:end]).
+which means that c ≤ κ.  so we have B_κ / c + A_κ = N => 1/c = (N-A_κ) /
+(B_κ-κ).
+
+The returned index is the index of the first w that's **kept**.  the returned w is
+the weight that's assigned to the resampled particles.
 """
-function cutoff(ws::Vector{<:Real}, N::Int)
-    # TODO: do this in place (see Fearnhead and Clifford 2003, Appendix C)
-    tot0 = sum(ws)
-    tot = tot0
-    for i in eachindex(ws)
-        if tot / ws[i] + (i-1) >= N
-            return i, tot/(N-i+1), tot0
+function cutoff_ascending(ws::Vector{T}, N::Int) where {T<:Real}
+    issorted(ws) ||
+        throw(ArgumentError("weights must be sorted in ascending order"))
+    tot = zero(T)
+    M = length(ws)
+    for (i,w) in enumerate(ws)
+        # avoid comparison with zero (will stop early)
+        if !iszero(w)
+            # there are i-1 elements < w, so M-(i-1) that are ≥ w
+            n_geq = M-i+1
+            if tot ≤ (N - n_geq)*w
+                return i, tot / (N-n_geq)
+            end
+            tot += w
         end
-        tot -= ws[i]
     end
+    # resample all, return M+1 and 1/N
+    return M+1, tot/N
 end
 
 """
@@ -60,13 +85,14 @@ without replacement.
 
 NOTE!! This algorithm is only guaranteed to give at most `n` samples, and not
 necessarily exactly `n`, especially when `n` is close to `length(x)`.  This
-isn't a problem in practice because this used to sample from the "leftover"
+isn't a problem in practice because this is used to sample from the "leftover"
 putative particles, and the worst case is when there's no particles carried over
 in which case we'll take at most 50% of the putatives (much less when there are
 more than two components per particle).
 
 Returns the number or elements resampled (≤ n)
 
+Modifies the input vector, placing the resampled elements in the first positions
 """
 function sample_stratified!(x::AbstractVector, n::Int, w)
     K = sum(w) / n
@@ -83,7 +109,7 @@ function sample_stratified!(x::AbstractVector, n::Int, w)
     end
 
     @assert i_store ≤ n
-    i_store < n && @debug "  sample_stratified! ask for $(n) but got $(i_store)"
+    i_store < n && @debug "sample_stratified! ask for $(n) but got $(i_store)"
     return i_store
 end
 
@@ -109,7 +135,7 @@ function fit!(ps::FearnheadParticles{P}, y) where P
     M = length(putative)
     if M <= ps.N
         @debug "  M=$M: Fewer than N=$(ps.N) particles"
-        ps.particles = instantiate.(putative)
+        ps.particles = instantiate.(putative, weight.(putative) ./ total_w)
     else
         # TODO: consider doing this all in place, see Fearnhead and Cliffor
         # 2003, Appendix C.  basic idea is to use an algorithm like
@@ -118,25 +144,40 @@ function fit!(ps::FearnheadParticles{P}, y) where P
         # re-sample the rest in place as well.  then you just trim the vector of
         # putatives to the right length and good to go.
 
-        @debug "  M=$M: More than N=$(ps.N): Resampling"
         # resample down to N particles
-        sort!(putative, alg=QuickSort, by=weight, rev=true)
+        sort!(putative, alg=QuickSort, by=weight)
         ws = weight.(putative)
-        ci, c, totalw = cutoff(ws, ps.N)
-        @debug "  keeping $(ci-1) out of $M (cutoff=$c)"
+        # will keep kept_i:end, and resample from 1:(kept_i-1) and give weight w_resamp
+        kept_i, w_resamp = cutoff_ascending(ws, ps.N)
+
+        # keep kept_i:end
+        n_kept = length(ws) - (kept_i - 1)
         
-        # resample from ci:end
-        n_resamp = ps.N - (ci-1)
-        n_resamp = sample_stratified!(view(putative, ci:lastindex(putative)),
+        # resample from 1:(kept_i-1)
+        n_resamp = ps.N - n_kept
+
+        @debug """
+               M=$M: More than N=$(ps.N)
+                 Keeping $n_kept ($kept_i:end)
+                 Resampling $(M-n_kept) from $n_resamp
+               """
+
+        n_resamp = sample_stratified!(view(putative, 1:(kept_i-1)),
                                       n_resamp,
-                                      view(ws, ci:lastindex(ws)))
+                                      view(ws, 1:(kept_i-1)))
 
-        resize!(ps.particles, n_resamp+ci-1)
+        resize!(ps.particles, n_resamp+n_kept)
 
-        for i in eachindex(ps.particles)
-            new_w = (i < ci ? weight(putative[i]) : c) / total_w
-            ps.particles[i] = weight(instantiate(putative[i]), new_w)
-        end
+        @debug "resampling $n_resamp to ps.particles[$(1:n_resamp)]"
+        @views ps.particles[1:n_resamp] .=
+            instantiate.(putative[1:n_resamp], w_resamp/total_w)
+
+        @debug "keeping last $n_kept ($(kept_i+1:lastindex(putative))) " *
+            "as ps.particles[$(n_resamp .+ (1:n_kept))]"
+        @views ps.particles[n_resamp .+ (1:n_kept)] .=
+            instantiate.(putative[kept_i:end],
+                         weight.(putative[kept_i:end]) ./ total_w)
+
         @debug "  total weight: $(sum(weight(p) for p in ps.particles))"
     end
     return ps

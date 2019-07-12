@@ -128,7 +128,10 @@ and of components) to make minor updates, and are only necessary if a particle
 is accepted, hence separating the creation of the putative particle and 
 instantiating/accepting it.
 """
-function instantiate(putative::PutativeParticle{<:InfiniteParticle})
+instantiate(putative::PutativeParticle{<:InfiniteParticle}) =
+    instantiate(putative, putative.weight)
+    
+function instantiate(putative::PutativeParticle{<:InfiniteParticle}, weight)
     p = putative.ancestor
     stateprior, comp_i = add(p.stateprior, putative.state)
     0 < comp_i ≤ length(p.components)+1 ||
@@ -142,9 +145,11 @@ function instantiate(putative::PutativeParticle{<:InfiniteParticle})
         components[comp_i] = putative.updated_comp
     end
 
-    return InfiniteParticle(components, p, comp_i, putative.weight, p.prior, stateprior)
+    return InfiniteParticle(components, p, comp_i, weight, p.prior, stateprior)
 end
+
 instantiate(p::AbstractParticle) = p
+instantiate(p::AbstractParticle, w::Float64) = weight(p, w)
 
 fit(p::InfiniteParticle, y, x) = instantiate(PutativeParticle(p, y, x))
 
