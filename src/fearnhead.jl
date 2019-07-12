@@ -73,12 +73,15 @@ function cutoff_ascending(ws::Vector{T}, N::Int) where {T<:Real}
     tot = zero(T)
     M = length(ws)
     for (i,w) in enumerate(ws)
-        # there are i-1 elements < w, so M-(i-1) that are ≥ w
-        n_geq = M-i+1
-        if tot ≤ (N - n_geq)*w
-            return i, tot / (N-n_geq)
+        # avoid comparison with zero (will stop early)
+        if !iszero(w)
+            # there are i-1 elements < w, so M-(i-1) that are ≥ w
+            n_geq = M-i+1
+            if tot ≤ (N - n_geq)*w
+                return i, tot / (N-n_geq)
+            end
+            tot += w
         end
-        tot += w
     end
     # resample all, return M+1 and 1/N
     return M+1, tot/N
