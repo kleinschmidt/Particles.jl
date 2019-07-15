@@ -11,4 +11,5 @@ using LinearAlgebra
     include("nix2.jl")
     include("niw.jl")
     include("labeled.jl")
+    include("clustering.jl")
 end

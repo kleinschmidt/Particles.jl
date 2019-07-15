@@ -1,7 +1,7 @@
 name = "Particles"
 uuid = "2ebe8b25-25be-5fc1-b6bc-48c775df5563"
 authors = ["Dave Kleinschmidt <dave.f.kleinschmidt@gmail.com>"]
-version = "0.1.1"
+version = "0.1.2"
 
 [deps]
 ConjugatePriors = "1624bea9-42b1-5fc1-afd3-e96f729c8d6c"

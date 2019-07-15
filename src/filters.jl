@@ -38,7 +38,7 @@ ncomponents_dist(p::ParticleFilter) =
 
 function assignment_similarity(ps::ParticleFilter)
     as = assignments(ps)
-    1 .- pairwise(Hamming(), as') ./ size(as, 2)
+    1 .- pairwise(Hamming(), as, dims=1) ./ size(as, 2)
 end
 
 """
@@ -50,7 +50,7 @@ observations on which the two clusterings agree, divided by the total number of
 pairs.
 
 """
-function randindex(ps::ParticleFilter, truth::Vector{<:Integer}, type=:adjusted)
+function randindex(ps::ParticleFilter, truth::T, type=:adjusted) where {T<:AbstractVector{<:Integer}}
     ps_sim = assignment_similarity(ps)
     truth_sim = truth .== truth'
 
