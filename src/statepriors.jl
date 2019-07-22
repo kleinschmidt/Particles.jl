@@ -103,7 +103,7 @@ Base.isempty(crp::StickyCRP) = isempty(crp.N)
 
 state_to_index(crp::StickyCRP, state::Int) = state == 0 ? crp.last : state
 
-candidates(crp::StickyCRP) = isempty(crp) ? 1 : 0:length(crp.N)+1
+candidates(crp::StickyCRP) = isempty(crp) ? (1:1) : 0:length(crp.N)+1
 add(crp::StickyCRP, x::Int, n::Float64=1.0) = add(crp::StickyCRP, state_to_index(crp, x), x==0, n)
 function add(crp::StickyCRP, x::Int, sticky::Bool, n::Float64)
     N = copy(crp.N)
