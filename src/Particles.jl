@@ -10,7 +10,8 @@ using
     Distributions,
     ConjugatePriors,
     StatsBase,
-    StatsFuns
+    StatsFuns,
+    MappedArrays
 
 import StatsBase: fit!, fit
 

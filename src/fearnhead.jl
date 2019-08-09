@@ -12,6 +12,7 @@
 
 mutable struct FearnheadParticles{P} <: ParticleFilter
     particles::Vector{P}
+    _putatives::Vector
     N::Int
 end
 
@@ -27,7 +28,7 @@ end
 
 # Initialize population with a single, empty particle. (avoid redundancy)
 FearnheadParticles(n::Int, prior::Union{Tuple,<:Distribution}, stateprior::T) where T<:StatePrior =
-    FearnheadParticles([InfiniteParticle(prior, stateprior)], n)
+    FearnheadParticles([InfiniteParticle(prior, stateprior)], [], n)
 
 """
     cutoff_ascending(ws::Vector{<:Real}, N::Int)
@@ -56,7 +57,7 @@ which means that c ≤ κ.  so we have B_κ / c + A_κ = N => 1/c = (N-A_κ) /
 The returned index is the index of the first w that's **kept**.  the returned w is
 the weight that's assigned to the resampled particles.
 """
-function cutoff_ascending(ws::Vector{T}, N::Int) where {T<:Real}
+function cutoff_ascending(ws::AbstractVector{T}, N::Int) where {T<:Real}
     issorted(ws) ||
         throw(ArgumentError("weights must be sorted in ascending order"))
     tot = zero(T)
@@ -129,7 +130,11 @@ Filter a single observation with the population of particles in `ps`.
 """
 function fit!(ps::FearnheadParticles{P}, y) where P
     # generate putative particles
-    putative = collect(Iterators.flatten(putatives(p, y) for p in ps.particles))
+    putative = empty!(ps._putatives)
+    for p in Iterators.flatten(putatives(p, y) for p in ps.particles)
+        push!(putative, p)
+    end
+    putative = of_eltype(typeof(first(putative)), putative)
     total_w = sum(weight(p) for p in putative)
 
     M = length(putative)
@@ -146,7 +151,7 @@ function fit!(ps::FearnheadParticles{P}, y) where P
 
         # resample down to N particles
         sort!(putative, alg=QuickSort, by=weight)
-        ws = weight.(putative)
+        ws = mappedarray(weight, putative)
         # will keep kept_i:end, and resample from 1:(kept_i-1) and give weight w_resamp
         kept_i, w_resamp = cutoff_ascending(ws, ps.N)
 
