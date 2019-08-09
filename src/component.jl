@@ -17,8 +17,9 @@ posterior_predictive(d::NormalInverseChisq) =
 
 function posterior_predictive(d::NormalInverseWishart)
     df = d.nu - length(d.mu) + 1
-    Λ = Matrix(d.Lamchol)
-    MvTDist(df, d.mu, Λ*(d.kappa+1)/(d.kappa*df))
+    Λ = convert(AbstractMatrix, d.Lamchol) * (d.kappa+1)/(d.kappa*df)
+    Λchol = cholesky(Λ)
+    Distributions.GenericMvTDist(df, d.mu, PDMat(Λ, Λchol))
 end
 
 Distributions.logpdf(c::Component, x) = logpdf(posterior_predictive(c), x)
@@ -133,7 +134,7 @@ function marginal_log_lhood(prior::NormalInverseWishart, suffstats::MvNormalStat
     μn, Λcholn, κn, νn = params(posterior_canon(prior, suffstats))
     n = νn - ν0
     d = length(μ0)
-    
+
     (-0.5*n*d) * logπ +
         logmvgamma(d, νn*0.5) - logmvgamma(d, ν0*0.5) +
         logdet(Λchol0)*ν0*0.5 - logdet(Λcholn)*νn*0.5 +

@@ -8,17 +8,17 @@ using
 
 using
     Distributions,
+    PDMats,
     ConjugatePriors,
     StatsBase,
     StatsFuns
 
 import StatsBase: fit!, fit
 
-using Distributions: NormalStats, MvNormalStats
+using Distributions: NormalStats, MvNormalStats, GenericMvTDist
 using ConjugatePriors: posterior_canon, NormalInverseChisq, NormalInverseWishart
 using StatsBase: Weights
 using StatsFuns: logmvgamma, logπ
-
 
 export
     ParticleFilter,
