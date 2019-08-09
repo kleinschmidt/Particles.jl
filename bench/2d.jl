@@ -3,11 +3,10 @@ using BenchmarkTools,
     Distributions,
     ConjugatePriors,
     StaticArrays,
-    Compat,
+    LinearAlgebra,
     Random
 
 using ConjugatePriors: NormalInverseWishart
-using Compat.LinearAlgebra
 
 Random.seed!(100)
 
@@ -19,18 +18,28 @@ prior = NormalInverseWishart(zeros(2), 0.1, Matrix(1.0I,2,2), 3.0)
 
 function f(y, prior)
     stateprior = ChineseRestaurantProcess(1.)
-    ps = ChenLiuParticles(100, prior, stateprior)
+    ps = FearnheadParticles(100, prior, stateprior)
     filter!(ps, y, false)
 end
 
 f(y, prior)
 @btime(f($y, $prior))
 
-sprior = NormalInverseWishart(SVector{2}(zeros(2)), 0.1, cholesky(SMatrix{2,2}(1.0I)), 3.0)
+
+sprior = NormalInverseWishart(SVector{2}(zeros(2)), 0.1,
+                              cholesky(SMatrix{2,2}(1.0I)), 3.0)
 
 f(y, sprior)
 @btime(f($y, $sprior))
 
-sy = SVector{2}.(y)
-f(sy, sprior)
+
+sy = SVector{2}.(y);
+f(sy, sprior);
 ps3 = @btime f($sy, $sprior)
+
+
+## faa9976:
+##  303.332 ms (2622263 allocations: 180.38 MiB)
+##  124.002 ms (1403079 allocations: 110.79 MiB)
+##   81.780 ms (821809 allocations: 66.29 MiB)
+
